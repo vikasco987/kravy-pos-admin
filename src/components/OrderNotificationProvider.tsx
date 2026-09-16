@@ -1,0 +1,302 @@
+"use client";
+
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useAuthContext } from "@/components/AuthContext";
+import toast from "react-hot-toast";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, ShoppingBag, Bell, ExternalLink } from "lucide-react";
+import { kravy } from "@/lib/sounds";
+import { useTerminalContext } from "@/components/TerminalContext";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface OrderNotification {
+    id: string;
+    customerName: string;
+    total: number;
+    tableName?: string;
+    itemCount?: number;
+    createdAt: string;
+}
+
+interface ReviewNotification {
+    id: string;
+    customerName: string;
+    rating: number;
+    comment?: string;
+}
+
+// ─── Main Hook + Provider ─────────────────────────────────────────────────────
+function OrderPopup({ order, onClose }: { order: OrderNotification; onClose: () => void }) {
+    useEffect(() => {
+        const t = setTimeout(onClose, 8000);
+        return () => clearTimeout(t);
+    }, [onClose]);
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, x: 80, scale: 0.9 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 80, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="w-80 bg-white rounded-2xl shadow-2xl border border-orange-100 overflow-hidden"
+            style={{ boxShadow: "0 20px 60px rgba(255,107,53,0.2), 0 4px 20px rgba(0,0,0,0.1)" }}
+        >
+            {/* Top bar */}
+            <div className="bg-gradient-to-r from-orange-500 to-red-500 px-4 py-2 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <motion.div
+                        animate={{ scale: [1, 1.3, 1] }}
+                        transition={{ repeat: Infinity, duration: 1 }}
+                    >
+                        <Bell size={14} className="text-white" />
+                    </motion.div>
+                    <span className="text-white text-[0.65rem] font-black uppercase tracking-widest">🚨 New QR Order!</span>
+                </div>
+                <button onClick={onClose} className="text-white/70 hover:text-white transition">
+                    <X size={14} />
+                </button>
+            </div>
+
+            {/* Body */}
+            <div className="px-4 py-3">
+                <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center shrink-0">
+                        <ShoppingBag size={20} className="text-orange-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <div className="font-black text-sm text-gray-900 truncate">{order.customerName || "Guest Customer"}</div>
+                        {order.tableName && (
+                            <div className="text-[0.65rem] font-bold text-gray-500 mt-0.5">🪑 {order.tableName}</div>
+                        )}
+                        <div className="flex items-center gap-2 mt-1.5">
+                            <span className="text-lg font-black text-orange-600">₹{order.total}</span>
+                            {order.itemCount && (
+                                <span className="text-[0.6rem] font-bold bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full border border-orange-100">
+                                    {order.itemCount} items
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 mt-3">
+                    <a
+                        href="/dashboard/qr-orders"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-orange-500 text-white rounded-xl text-xs font-black hover:bg-orange-600 transition shadow-md shadow-orange-200"
+                    >
+                        View Orders <ExternalLink size={11} />
+                    </a>
+                    <button onClick={onClose} className="px-3 py-2 border border-gray-200 rounded-xl text-xs font-black text-gray-400 hover:bg-gray-50 transition">
+                        Dismiss
+                    </button>
+                </div>
+            </div>
+
+            {/* Auto-dismiss progress bar */}
+            <motion.div
+                initial={{ width: "100%" }}
+                animate={{ width: "0%" }}
+                transition={{ duration: 8, ease: "linear" }}
+                className="h-0.5 bg-orange-400"
+            />
+        </motion.div>
+    );
+}
+
+// ─── Main Hook + Provider ─────────────────────────────────────────────────────
+export function OrderNotificationProvider() {
+    const { user } = useAuthContext();
+    const userId = user?.id;
+    const { fetchData } = useTerminalContext();
+    const [popups, setPopups] = useState<OrderNotification[]>([]);
+    const seenOrderIds = useRef<Set<string>>(new Set());
+    const seenReviewIds = useRef<Set<string>>(new Set());
+    const eventSourceRef = useRef<EventSource | null>(null);
+
+    // Live toggles loaded from local storage / database
+    const [prefs, setPrefs] = useState({
+        newOrderPopup: true,
+        newOrderSound: true,
+        newOrderToast: true,
+        reviewToast: true,
+    });
+
+    const prefsRef = useRef(prefs);
+    useEffect(() => {
+        prefsRef.current = prefs;
+    }, [prefs]);
+
+    const removePopup = useCallback((id: string) => {
+        setPopups(prev => prev.filter(p => p.id !== id));
+    }, []);
+
+    // Sync notification preferences
+    useEffect(() => {
+        // 1. Read from localStorage for fast load (runs immediately on mount)
+        const stored = localStorage.getItem("kravy_notification_prefs");
+        if (stored) {
+            try {
+                setPrefs(prev => ({ ...prev, ...JSON.parse(stored) }));
+            } catch (e) {}
+        }
+
+        if (!userId) return;
+
+        // 2. Fetch fresh from DB uiPreferences
+        fetch("http://localhost:15432/api/user/me")
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.uiPreferences) {
+                    const dbPrefs = {
+                        newOrderPopup: data.uiPreferences.newOrderPopup !== false,
+                        newOrderSound: data.uiPreferences.newOrderSound !== false,
+                        newOrderToast: data.uiPreferences.newOrderToast !== false,
+                        reviewToast: data.uiPreferences.reviewToast !== false,
+                    };
+                    setPrefs(dbPrefs);
+                    localStorage.setItem("kravy_notification_prefs", JSON.stringify(dbPrefs));
+                }
+            })
+            .catch(() => {});
+
+        // 3. Listen to localStorage updates across tabs
+        const handleStorageChange = () => {
+            const storedVal = localStorage.getItem("kravy_notification_prefs");
+            if (storedVal) {
+                try {
+                    setPrefs(prev => ({ ...prev, ...JSON.parse(storedVal) }));
+                } catch (e) {}
+            }
+        };
+        window.addEventListener("storage", handleStorageChange);
+        return () => window.removeEventListener("storage", handleStorageChange);
+    }, [userId]);
+
+    useEffect(() => {
+        if (!userId) return;
+
+        // Load already-seen IDs from sessionStorage on first load
+        const storedSeen = sessionStorage.getItem("kravy_seen_orders");
+        if (storedSeen) {
+            JSON.parse(storedSeen).forEach((id: string) => seenOrderIds.current.add(id));
+        }
+
+        let isMounted = true;
+        let pollInterval: NodeJS.Timeout;
+
+        async function poll() {
+            if (!isMounted) return;
+            try {
+                const response = await fetch("http://localhost:15432/api/notifications");
+                if (!response.ok) return;
+                const data = await response.json();
+                
+                if (!isMounted) return;
+
+                if (data.orders && Array.isArray(data.orders)) {
+                    const newOrders = data.orders.filter(
+                        (o: any) => !seenOrderIds.current.has(o.id)
+                    );
+
+                    if (newOrders.length > 0) {
+                        // 🔥 Force TerminalContext to fetch data immediately, bypassing the 30s cache!
+                        // This ensures the big IncomingOrderModal appears instantly.
+                        fetchData(false, true);
+
+                        if (prefsRef.current.newOrderSound) {
+                            kravy.orderBell();
+                        }
+
+                        newOrders.forEach((order: any) => {
+                            seenOrderIds.current.add(order.id);
+
+                            // Count items
+                            let itemCount = 0;
+                            try {
+                                const items = Array.isArray(order.items) ? order.items : JSON.parse(order.items || "[]");
+                                itemCount = items.reduce((s: number, i: any) => s + (i.quantity || 1), 0);
+                            } catch { }
+
+                            const notification: OrderNotification = {
+                                id: order.id,
+                                customerName: order.customerName || "Guest",
+                                total: order.total,
+                                tableName: order.table?.name || order.tableName,
+                                itemCount,
+                                createdAt: order.createdAt,
+                            };
+
+                            if (prefsRef.current.newOrderPopup) {
+                                setPopups(prev => [notification, ...prev].slice(0, 3)); // max 3 popups
+                            }
+
+                            // Also fire a toast (in case popup is missed)
+                            if (prefsRef.current.newOrderToast) {
+                                toast.success(`🛎️ New order — ₹${order.total}`, {
+                                    duration: 4000,
+                                    position: "top-center",
+                                });
+                            }
+                        });
+
+                        // Persist seen IDs
+                        sessionStorage.setItem("kravy_seen_orders",
+                            JSON.stringify(Array.from(seenOrderIds.current).slice(-100))
+                        );
+                    }
+                }
+
+                if (data.reviews && Array.isArray(data.reviews)) {
+                    const newReviews = data.reviews.filter(
+                        (r: any) => !seenReviewIds.current.has(r.id)
+                    );
+
+                    if (newReviews.length > 0) {
+                        if (prefsRef.current.newOrderSound) {
+                            kravy.review();
+                        }
+                        newReviews.forEach((r: any) => {
+                            seenReviewIds.current.add(r.id);
+                            if (prefsRef.current.reviewToast) {
+                                toast(`⭐ New ${r.rating}-star review from ${r.customerName || "a customer"}`, {
+                                    duration: 5000,
+                                    icon: "🌟",
+                                });
+                            }
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error("Notification poll error:", e);
+            }
+        }
+
+        // Initial fetch
+        poll();
+        
+        // Poll every 10s to minimize server cost
+        pollInterval = setInterval(poll, 10000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(pollInterval);
+            // eventSourceRef is completely removed
+        };
+    }, [userId]);
+
+    return (
+        <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none">
+            <AnimatePresence>
+                {popups.map(order => (
+                    <div key={order.id} className="pointer-events-auto">
+                        <OrderPopup
+                            order={order}
+                            onClose={() => removePopup(order.id)}
+                        />
+                    </div>
+                ))}
+            </AnimatePresence>
+        </div>
+    );
+}

@@ -1,0 +1,1 @@
+# kravy-pos-admin

@@ -1,0 +1,213 @@
+"use client";
+
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { useSmartPolling } from "@/hooks/useSmartPolling";
+
+export type OrderStatus = "PENDING" | "ACCEPTED" | "PREPARING" | "READY" | "COMPLETED";
+
+export interface Order {
+    id: string;
+    orderNumber?: string;
+    items: any[];
+    total: number;
+    status: OrderStatus;
+    tableId?: string; // ✅ Added for fast lookups
+    table?: { id: string; name: string };
+    customerName?: string;
+    customerPhone?: string;
+    customerAddress?: string;
+    createdAt: string;
+    isDeleted?: boolean;
+    kotNumbers?: string[];
+    billNumber?: string;
+    tokenNumber?: string | number;
+}
+
+export interface Table {
+    id: string;
+    name: string;
+    status: "FREE" | "PENDING" | "ACCEPTED" | "PREPARING" | "READY";
+    activeOrderId?: string;
+    zone?: string;
+    isOccupied?: boolean;
+    activeCount?: number;
+    startTime?: string;
+}
+
+interface TerminalContextType {
+    tablesList: Table[];
+    orders: Order[];
+    ordersByTableId: Record<string, Order[]>; // Fast lookup map
+    business: any;
+    allProfiles: any[];
+    enableMultipleProfiles: boolean;
+    setSelectedProfileId: (id: string) => void;
+    isLoading: boolean;
+    lastUpdated: number | null;
+    fetchData: (showLoading?: boolean) => any;
+    updateTableStatus: (tableId: string, updates: Partial<Table>) => void;
+    setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
+    isSyncing: boolean;
+    manualSync: () => void;
+}
+
+const TerminalContext = createContext<TerminalContextType | undefined>(undefined);
+
+export const TerminalProvider = ({ children }: { children: React.ReactNode }) => {
+    const [rawTables, setRawTables] = useState<Table[]>([]);
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [allProfiles, setAllProfiles] = useState<any[]>([]);
+    const [enableMultipleProfiles, setEnableMultipleProfiles] = useState(false);
+    const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [lastUpdated, setLastUpdated] = useState<number | null>(null);
+
+    const business = React.useMemo(() => {
+        if (!allProfiles.length) return null;
+        if (selectedProfileId) {
+            const found = allProfiles.find(p => p.id === selectedProfileId);
+            if (found) return found;
+        }
+        return allProfiles[0];
+    }, [allProfiles, selectedProfileId]);
+
+    // Stable references to prevent infinite callback recreation loops
+    const lastUpdatedRef = React.useRef<number | null>(null);
+    const rawTablesLengthRef = React.useRef<number>(0);
+
+    // Keep length ref in sync
+    useEffect(() => {
+        rawTablesLengthRef.current = rawTables.length;
+    }, [rawTables.length]);
+
+    // Group orders by table ID for fast lookup
+    const ordersByTableId = React.useMemo(() => {
+        const map: Record<string, Order[]> = {};
+        orders.forEach(order => {
+            if (order.tableId) {
+                if (!map[order.tableId]) map[order.tableId] = [];
+                map[order.tableId].push(order);
+            }
+        });
+        return map;
+    }, [orders]);
+
+    // Reactively compute tablesList whenever orders or rawTables change
+    const tablesList = React.useMemo(() => {
+        return rawTables.map(table => {
+            const tableOrders = (ordersByTableId[table.id] || []).filter(o => !o.isDeleted && o.status !== "COMPLETED");
+            
+            let status: Table["status"] = "FREE";
+            if (tableOrders.some(o => o.status === "READY")) status = "READY";
+            else if (tableOrders.some(o => o.status === "PREPARING")) status = "PREPARING";
+            else if (tableOrders.some(o => o.status === "ACCEPTED")) status = "ACCEPTED";
+            else if (tableOrders.some(o => o.status === "PENDING")) status = "PENDING";
+
+            const activeCount = tableOrders.length;
+            const sortedOrders = [...tableOrders].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+            const startTime = sortedOrders.length > 0 ? sortedOrders[0].createdAt : undefined;
+            const activeOrderId = tableOrders.length > 0 ? tableOrders[0].id : undefined;
+
+            return { ...table, status, activeCount, startTime, activeOrderId };
+        });
+    }, [rawTables, ordersByTableId]);
+
+    const fetchData = useCallback(async (showLoading = true, force = false) => {
+        const currentLastUpdated = lastUpdatedRef.current;
+        // ✅ Stale-time logic: Avoid fetching if data is recent (< 30s) unless forced
+        if (!force && currentLastUpdated && Date.now() - currentLastUpdated < 30000) {
+            console.log("[TerminalContext] Data is fresh, skipping fetch");
+            return;
+        }
+
+        if (showLoading && rawTablesLengthRef.current === 0) setIsLoading(true);
+        
+        try {
+            const [tablesRes, ordersRes, profilesRes] = await Promise.all([
+                fetch(`http://localhost:15432/api/tables`, { cache: 'no-store' }).catch(() => null),
+                fetch(`http://localhost:15432/api/orders?active=true`, { cache: 'no-store' }).catch(() => null),
+                fetch(`http://localhost:15432/api/profiles`, { cache: 'no-store' }).catch(() => null)
+            ]);
+
+            if (tablesRes?.ok) {
+                const tData = await tablesRes.json();
+                setRawTables(tData);
+            }
+            if (ordersRes?.ok) {
+                const oData = await ordersRes.json();
+                setOrders(prevOrders => {
+                    const statusRank: Record<string, number> = { "PENDING": 0, "ACCEPTED": 1, "PREPARING": 2, "READY": 3, "COMPLETED": 4 };
+                    return oData.map((fetchedOrder: Order) => {
+                        const localOrder = prevOrders.find(o => o.id === fetchedOrder.id);
+                        if (localOrder) {
+                            const localRank = statusRank[localOrder.status] ?? 0;
+                            const fetchedRank = statusRank[fetchedOrder.status] ?? 0;
+                            // Keep local optimistic status if it's ahead of fetched data (avoids race condition reverting status)
+                            if (localRank > fetchedRank) {
+                                return { ...fetchedOrder, status: localOrder.status };
+                            }
+                        }
+                        return fetchedOrder;
+                    });
+                });
+            }
+            if (profilesRes?.ok) {
+                const pData = await profilesRes.json();
+                if (pData.profiles && Array.isArray(pData.profiles)) {
+                    setAllProfiles(pData.profiles);
+                    setEnableMultipleProfiles(pData.enableMultipleProfiles || false);
+                }
+            }
+            
+            if (tablesRes?.ok || ordersRes?.ok || profilesRes?.ok) {
+                const now = Date.now();
+                lastUpdatedRef.current = now;
+                setLastUpdated(now);
+            }
+        } catch (err) {
+            console.error("Failed to fetch terminal data:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    const updateTableStatus = useCallback((tableId: string, updates: Partial<Table>) => {
+        // Optional: Manual override if needed
+        setRawTables(prev => prev.map(t => t.id === tableId ? { ...t, ...updates } : t));
+    }, []);
+
+    const pollCallback = useCallback(() => {
+        return fetchData(false);
+    }, [fetchData]);
+
+    const { isSyncing, manualSync } = useSmartPolling(pollCallback, 30000, true);
+
+    return (
+        <TerminalContext.Provider value={{
+            tablesList,
+            orders,
+            ordersByTableId,
+            business,
+            allProfiles,
+            enableMultipleProfiles,
+            setSelectedProfileId,
+            isLoading,
+            lastUpdated,
+            fetchData,
+            updateTableStatus,
+            setOrders,
+            isSyncing,
+            manualSync
+        }}>
+            {children}
+        </TerminalContext.Provider>
+    );
+};
+
+export const useTerminalContext = () => {
+    const context = useContext(TerminalContext);
+    if (context === undefined) {
+        throw new Error("useTerminalContext must be used within a TerminalProvider");
+    }
+    return context;
+};
