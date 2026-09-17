@@ -28,6 +28,12 @@ export default function CustomAuthPage() {
       } else if (errorStr) {
         toast.error(errorStr);
         window.history.replaceState({}, document.title, window.location.pathname);
+      } else {
+        // Auto-login if token exists
+        const token = localStorage.getItem('kravy_lite_token');
+        if (token) {
+          navigate('/dashboard/auto-apply');
+        }
       }
     }
   }, []);
@@ -135,6 +141,9 @@ export default function CustomAuthPage() {
           throw new Error(data.error || "Login failed");
         }
         toast.success("Logged in successfully!");
+        if (data.token) {
+          localStorage.setItem('kravy_lite_token', data.token);
+        }
         setTimeout(() => {
           navigate('/dashboard/auto-apply');
         }, 500);

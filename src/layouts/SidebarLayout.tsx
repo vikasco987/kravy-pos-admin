@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Sparkles, LayoutGrid, LogOut } from 'lucide-react';
+import { Sparkles, LayoutGrid, LogOut, Users } from 'lucide-react';
 
 export default function SidebarLayout() {
     const navigate = useNavigate();
@@ -10,9 +10,12 @@ export default function SidebarLayout() {
             {/* Sidebar */}
             <div className="w-64 bg-white dark:bg-[#1A1A2E] border-r border-gray-200 dark:border-gray-800 flex flex-col justify-between">
                 <div>
-                    <div className="p-6 border-b border-gray-200 dark:border-gray-800">
-                        <h2 className="text-xl font-black text-orange-500">Kravy Admin</h2>
-                        <p className="text-xs text-gray-500 mt-1 tracking-wider uppercase font-bold">Internal Tools</p>
+                    <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex items-center gap-3">
+                        <img src="/logo.png" alt="Kravy Logo" className="w-10 h-10 object-contain rounded-xl" />
+                        <div>
+                            <h2 className="text-xl font-black text-blue-600 dark:text-blue-500">Kravy</h2>
+                            <p className="text-[10px] text-gray-500 mt-0.5 tracking-widest uppercase font-bold">Internal</p>
+                        </div>
                     </div>
                     <div className="p-4 space-y-2">
                         <NavLink 
@@ -29,12 +32,22 @@ export default function SidebarLayout() {
                             <LayoutGrid className="w-5 h-5" />
                             Browse Products
                         </NavLink>
+                        <NavLink 
+                            to="/dashboard/staff" 
+                            className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${isActive ? 'bg-orange-500 text-white shadow-md' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#0F0F23] hover:text-gray-900 dark:hover:text-white'}`}
+                        >
+                            <Users className="w-5 h-5" />
+                            Access Control
+                        </NavLink>
                     </div>
                 </div>
                 
                 <div className="p-4 border-t border-gray-200 dark:border-gray-800">
                     <button 
-                        onClick={() => navigate('/login')}
+                        onClick={() => {
+                            localStorage.removeItem('kravy_lite_token');
+                            navigate('/login');
+                        }}
                         className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold transition-colors"
                     >
                         <LogOut className="w-4 h-4" /> Logout

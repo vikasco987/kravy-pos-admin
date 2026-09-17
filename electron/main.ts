@@ -6,7 +6,11 @@ let mainWindow;
 try {
   const { startServer } = require('./server.js');
   startServer();
-} catch (e) {
+} catch (e: any) {
+  const fs = require('fs');
+  const os = require('os');
+  const logPath = path.join(os.homedir(), 'kravy_electron_error.txt');
+  fs.writeFileSync(logPath, `Failed to start server: ${e?.message || e}\n\nStack: ${e?.stack}`);
   console.error("Failed to start lite server", e);
 }
 
@@ -36,6 +40,11 @@ app.whenReady().then(() => {
 
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  })
+
+  // Fix for Mac/Windows bug where inputs lose keyboard focus
+  app.on('browser-window-focus', (event, win) => {
+    if (win) win.webContents.focus()
   })
 })
 

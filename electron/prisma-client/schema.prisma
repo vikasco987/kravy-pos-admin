@@ -1,5 +1,6 @@
 generator client {
   provider      = "prisma-client-js"
+  output        = "../electron/prisma-client"
   binaryTargets = ["native", "windows", "rhel-openssl-1.0.x", "rhel-openssl-3.0.x"]
 }
 
@@ -43,9 +44,9 @@ model RolePermission {
 //////////////////////////////////////////////////
 
 model Category {
-  id      String  @id @default(auto()) @map("_id") @db.ObjectId
-  name    String
-  clerkId String?
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  clerkId   String?
   sortOrder Int?
 
   parentId String?    @db.ObjectId
@@ -55,8 +56,8 @@ model Category {
   items     Item[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  zones     String[] @default([]) // ✅ Multi-zone menu support for categories
+
+  zones String[] @default([]) // ✅ Multi-zone menu support for categories
 
   @@index([clerkId])
 }
@@ -87,20 +88,20 @@ model Item {
   isActive Boolean @default(true)
 
   // Inventory Details
-  openingStock Float? @default(0)
-  currentStock Float? @default(0)
-  reorderLevel Float? @default(0)
+  openingStock  Float?  @default(0)
+  currentStock  Float?  @default(0)
+  reorderLevel  Float?  @default(0)
   inventoryCode String? // ✅ Generated serial number / inventory code
 
   // QR Menu Enhancements
-  isVeg         Boolean @default(true)
-  isEgg         Boolean @default(false)
-  isBestseller  Boolean @default(false)
-  isRecommended Boolean @default(false)
-  isNew         Boolean @default(false)
-  isFavorite    Boolean @default(false)
+  isVeg         Boolean  @default(true)
+  isEgg         Boolean  @default(false)
+  isBestseller  Boolean  @default(false)
+  isRecommended Boolean  @default(false)
+  isNew         Boolean  @default(false)
+  isFavorite    Boolean  @default(false)
   spiciness     String? // mild, medium, hot
-  rating        Float?  @default(4.5)
+  rating        Float?   @default(4.5)
   hiName        String?
   mrName        String?
   taName        String?
@@ -109,14 +110,13 @@ model Item {
   variants      Json? // List of { id, groupName, type ('radio'|'checkbox'), required, options: [{id, name, price}] }
   tags          String[] // e.g. ["bestseller", "spicy"]
   zones         String[] // ✅ Multi-zone menu support
-  
-  packagingCharges Float? @default(0)
+
+  packagingCharges Float?  @default(0)
   gstType          String? // GOODS, SERVICES
   taxRate          String? // GST 5.0% etc
   calories         Float?
   protein          Float?
   shortCode        String? // Quick add code
-
 
   // Relationship to AddonGroups
   addonGroups   AddonGroup[] @relation("ItemToAddonGroups", fields: [addonGroupIds], references: [id])
@@ -124,9 +124,9 @@ model Item {
 
   user User @relation(fields: [userId], references: [id])
 
-  reviews   Review[]
-  recipe    RecipeItem[]
-  
+  reviews Review[]
+  recipe  RecipeItem[]
+
   expiryDate DateTime? // ✅ Added for item expiry tracking
 
   createdAt DateTime @default(now())
@@ -137,14 +137,14 @@ model Item {
 
 model RawMaterial {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  clerkId   String?  // Clerk User ID
+  clerkId   String? // Clerk User ID
   userId    String   @db.ObjectId
   user      User     @relation(fields: [userId], references: [id])
   name      String
-  unit      String   // e.g., kg, gram, piece, liter
+  unit      String // e.g., kg, gram, piece, liter
   stock     Float    @default(0)
   minStock  Float    @default(0) // Alert level
-  price     Float?   // Last purchase price
+  price     Float? // Last purchase price
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -152,33 +152,33 @@ model RawMaterial {
 }
 
 model RecipeItem {
-  id            String      @id @default(auto()) @map("_id") @db.ObjectId
-  itemId        String      @db.ObjectId
-  item          Item        @relation(fields: [itemId], references: [id])
-  materialId    String      @db.ObjectId
-  material      RawMaterial @relation(fields: [materialId], references: [id])
-  quantity      Float       // Quantity needed per item
-  
+  id         String      @id @default(auto()) @map("_id") @db.ObjectId
+  itemId     String      @db.ObjectId
+  item       Item        @relation(fields: [itemId], references: [id])
+  materialId String      @db.ObjectId
+  material   RawMaterial @relation(fields: [materialId], references: [id])
+  quantity   Float // Quantity needed per item
+
   @@unique([itemId, materialId])
 }
 
 model AddonGroup {
-  id                String   @id @default(auto()) @map("_id") @db.ObjectId
-  clerkId           String?
-  userId            String   @db.ObjectId
-  name              String
-  isCompulsory      Boolean  @default(false)
-  minSelection      Int      @default(0)
-  maxSelection      Int      @default(5)
-  allowMultipleUnits Boolean  @default(false)
-  items             Json     // List of { name, price, foodType, isAvailable }
+  id                 String  @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId            String?
+  userId             String  @db.ObjectId
+  name               String
+  isCompulsory       Boolean @default(false)
+  minSelection       Int     @default(0)
+  maxSelection       Int     @default(5)
+  allowMultipleUnits Boolean @default(false)
+  items              Json // List of { name, price, foodType, isAvailable }
 
   // Relationship to Categories
-  categoryIds       String[] @db.ObjectId
+  categoryIds String[] @db.ObjectId
 
   // Many-to-many with items
-  itemsOnMenu       Item[]   @relation("ItemToAddonGroups", fields: [itemIds], references: [id])
-  itemIds           String[] @db.ObjectId
+  itemsOnMenu Item[]   @relation("ItemToAddonGroups", fields: [itemIds], references: [id])
+  itemIds     String[] @db.ObjectId
 
   user User @relation(fields: [userId], references: [id])
 
@@ -201,13 +201,13 @@ model Party {
   createdBy String
   user      User?     @relation(fields: [createdBy], references: [clerkId])
 
-  loyaltyPoints Int @default(0)
+  loyaltyPoints Int   @default(0)
   walletBalance Float @default(0.0) // Added for Deposit/Wallet System
 
-  remarks   String?
-  status    String? @default("ACTIVE")
+  remarks String?
+  status  String? @default("ACTIVE")
 
-  bills BillManager[]
+  bills              BillManager[]
   walletTransactions WalletTransaction[] // Added relation
 
   createdAt DateTime @default(now())
@@ -235,65 +235,65 @@ model Payment {
 //////////////////////////////////////////////////
 
 model User {
-  id      String @id @default(auto()) @map("_id") @db.ObjectId
-  name    String
-  email   String @unique
-  clerkId String? @unique
-  phone   String? // ✅ Custom Auth Support (Manual unique check in API)
-  password String?         // ✅ Hashed Password
-  isVerified Boolean @default(false) // ✅ OTP Verification Status
-  otpCode   String?        // ✅ 6-digit OTP
-  otpExpiry DateTime?      // ✅ OTP Expiry Time
-  role    Role   @default(SELLER)
-  imageUrl String?         // ✅ Profile Photo
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  email      String    @unique
+  clerkId    String?   @unique
+  phone      String? // ✅ Custom Auth Support (Manual unique check in API)
+  password   String? // ✅ Hashed Password
+  isVerified Boolean   @default(false) // ✅ OTP Verification Status
+  otpCode    String? // ✅ 6-digit OTP
+  otpExpiry  DateTime? // ✅ OTP Expiry Time
+  role       Role      @default(SELLER)
+  imageUrl   String? // ✅ Profile Photo
 
   secondaryEmails String[] @default([]) // ✅ Additional emails for login
   secondaryPhones String[] @default([]) // ✅ Additional phones for login
 
-  items    Item[]
-  bills    BillManager[]
-  parties  Party[]
-  forms    Form[]
-  profiles BusinessProfile[]
-  uploads  Upload[]
-  addonGroups AddonGroup[]
+  items        Item[]
+  bills        BillManager[]
+  parties      Party[]
+  forms        Form[]
+  profiles     BusinessProfile[]
+  uploads      Upload[]
+  addonGroups  AddonGroup[]
   rawMaterials RawMaterial[]
 
-  isDisabled   Boolean  @default(false)
-  ownerId      String?
-  allowedPaths String[]
-  enableMultipleProfiles Boolean @default(false)
+  isDisabled             Boolean  @default(false)
+  ownerId                String?
+  allowedPaths           String[]
+  enableMultipleProfiles Boolean  @default(false)
 
   publicMetadata  Json? @default("{}")
   privateMetadata Json? @default("{}")
   unsafeMetadata  Json? @default("{}")
-  uiPreferences Json? @default("{}")
+  uiPreferences   Json? @default("{}")
 
   createdAt DateTime @default(now())
 
-  activities ActivityLog[]
-  orders     Order[]
-  tables     Table[]
-  combos     Combo[]
-  offers     Offer[]
-  rewards    Reward[]
-  sessions   UserSession[]
+  activities     ActivityLog[]
+  orders         Order[]
+  tables         Table[]
+  combos         Combo[]
+  offers         Offer[]
+  rewards        Reward[]
+  sessions       UserSession[]
   manualInvoices ManualInvoice[]
-  fuelBills  FuelBill[]
+  fuelBills      FuelBill[]
 }
 
 model UserSession {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String?  @db.ObjectId
-  staffId   String?  @db.ObjectId
-  user      User?    @relation(fields: [userId], references: [id])
-  
-  ipAddress String?
-  userAgent String?
+  id      String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId  String? @db.ObjectId
+  staffId String? @db.ObjectId
+  user    User?   @relation(fields: [userId], references: [id])
+
+  ipAddress  String?
+  userAgent  String?
   deviceType String? // mobile, desktop
   browser    String?
   os         String?
-  
+
   lastActive DateTime @default(now())
   expiresAt  DateTime
   createdAt  DateTime @default(now())
@@ -325,30 +325,29 @@ model Table {
 //////////////////////////////////////////////////
 
 model Order {
-  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
   orderNumber String?
   clerkUserId String
-  user        User   @relation(fields: [clerkUserId], references: [clerkId])
+  user        User    @relation(fields: [clerkUserId], references: [clerkId])
 
   tableId String? @db.ObjectId
   table   Table?  @relation(fields: [tableId], references: [id])
 
-  items Json // Array of { name, price, quantity, itemId, addedAt, addedInCase }
-  orderId String? @db.ObjectId
-  @@index([orderId])
-  total Float
-  deliveryCharges  Float? @default(0)
-  packagingCharges Float? @default(0)
+  items            Json // Array of { name, price, quantity, itemId, addedAt, addedInCase }
+  orderId          String? @db.ObjectId
+  total            Float
+  deliveryCharges  Float?  @default(0)
+  packagingCharges Float?  @default(0)
 
   status String @default("PENDING") // PENDING, ACCEPTING, ACCEPTED, PREPARING, READY, SERVED, COMPLETED
 
   // For Case 1 (Merge)
-  parentOrderId String?   @db.ObjectId
-  caseType      String? // "merge", "separate", "round2"
-  isMerged      Boolean   @default(false)
-  mergedAt      DateTime?
-  isDeleted     Boolean   @default(false)
-  deletedAt     DateTime?
+  parentOrderId   String?   @db.ObjectId
+  caseType        String? // "merge", "separate", "round2"
+  isMerged        Boolean   @default(false)
+  mergedAt        DateTime?
+  isDeleted       Boolean   @default(false)
+  deletedAt       DateTime?
   deletedSnapshot Json?
 
   // For Case 2 (Separate) - Track related orders
@@ -363,16 +362,17 @@ model Order {
   isBillPrinted Boolean @default(false)
 
   notes       String? // ✅ Global order instructions
-  preferences Json?   // ✅ Added for preferences like { dontSendCutlery: true }
+  preferences Json? // ✅ Added for preferences like { dontSendCutlery: true }
   zoneName    String? // ✅ Multi-zone menu support: Track which zone this order came from
-  tokenNumber Int?    // Legacy support
-  kotNumbers  Int[]   // Array of KOT/Token numbers for multiple rounds
+  tokenNumber Int? // Legacy support
+  kotNumbers  Int[] // Array of KOT/Token numbers for multiple rounds
 
   inventoryDeducted Boolean @default(false) // ✅ Atomic Idempotency tracking
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([orderId])
   @@index([clerkUserId])
   @@index([status])
   @@index([clerkUserId, createdAt(sort: Desc)])
@@ -441,7 +441,7 @@ model BusinessProfile {
   contactPersonEmail String?
   businessEmail      String?
 
-  googleReviewQRs    GoogleReviewQR[]
+  googleReviewQRs GoogleReviewQR[]
 
   upi             String?
   upiQrEnabled    Boolean @default(true)
@@ -451,18 +451,18 @@ model BusinessProfile {
   logoUrl         String?
   signatureUrl    String?
 
-  gstNumber            String?
-  businessAddress      String?
-  state                String?
-  district             String?
-  pinCode              String?
-  taxEnabled           Boolean @default(false)
-  taxRate              Float   @default(5.0)
-  gstType              String? @default("PRODUCT") // "PRODUCT" or "UNIVERSAL"
-  perProductTaxEnabled Boolean @default(false)
-  taxInclusive         Boolean @default(false)
-  servedStatusLabel    String  @default("SERVED")
-  enableFuelBilling    Boolean @default(false)
+  gstNumber             String?
+  businessAddress       String?
+  state                 String?
+  district              String?
+  pinCode               String?
+  taxEnabled            Boolean @default(false)
+  taxRate               Float   @default(5.0)
+  gstType               String? @default("PRODUCT") // "PRODUCT" or "UNIVERSAL"
+  perProductTaxEnabled  Boolean @default(false)
+  taxInclusive          Boolean @default(false)
+  servedStatusLabel     String  @default("SERVED")
+  enableFuelBilling     Boolean @default(false)
   enableHotelManagement Boolean @default(false)
 
   // ✅ Customer Data Requirement Settings
@@ -473,18 +473,18 @@ model BusinessProfile {
   collectCustomerAddress Boolean @default(false)
   requireCustomerAddress Boolean @default(false)
 
-  greetingMessage  String? @default("Thank You 🙏 Visit Again!")
-  businessNameSize String? @default("large") // medium, large, xlarge
-  tokenNumberSize  Int?     @default(22)
-  businessAddressSize Int?   @default(12)
+  greetingMessage     String? @default("Thank You 🙏 Visit Again!")
+  businessNameSize    String? @default("large") // medium, large, xlarge
+  tokenNumberSize     Int?    @default(22)
+  businessAddressSize Int?    @default(12)
 
   fssaiNumber  String?
   fssaiEnabled Boolean @default(false)
   hsnEnabled   Boolean @default(false)
-  
+
   // ✅ Loyalty Program Settings
   loyaltyPointRatio      Float   @default(10.0) // 1 point per X rupees
-  loyaltyMinRedeem       Int     @default(100)  // Minimum points to unlock reward
+  loyaltyMinRedeem       Int     @default(100) // Minimum points to unlock reward
   enableLoyaltyProgram   Boolean @default(true)
   loyaltyMinOrderAmount  Float   @default(0)
   loyaltyValueInRupees   Float   @default(1.0)
@@ -500,60 +500,60 @@ model BusinessProfile {
   qrMenuPriceInclusive Boolean @default(false)
   enableKOTWithBill    Boolean @default(false)
   enableMenuQRInBill   Boolean @default(false)
-  aiScraperEnabled   Boolean @default(false)
-  excelImportEnabled Boolean @default(false)
-  
-  // ✅ Additional Charges Settings
-  enableDeliveryCharges   Boolean @default(false)
-  deliveryChargeAmount    Float   @default(0)
-  deliveryGstEnabled      Boolean @default(false)
-  deliveryGstRate         Float   @default(0)
+  aiScraperEnabled     Boolean @default(false)
+  excelImportEnabled   Boolean @default(false)
 
-  enablePackagingCharges  Boolean @default(false)
-  packagingChargeAmount   Float   @default(0)
-  packagingGstEnabled     Boolean @default(false)
-  packagingGstRate        Float   @default(0)
+  // ✅ Additional Charges Settings
+  enableDeliveryCharges Boolean @default(false)
+  deliveryChargeAmount  Float   @default(0)
+  deliveryGstEnabled    Boolean @default(false)
+  deliveryGstRate       Float   @default(0)
+
+  enablePackagingCharges Boolean @default(false)
+  packagingChargeAmount  Float   @default(0)
+  packagingGstEnabled    Boolean @default(false)
+  packagingGstRate       Float   @default(0)
 
   // ✅ QR Specific Additional Charges
-  qrDeliveryChargeEnabled   Boolean @default(false)
-  qrDeliveryChargeAmount    Float   @default(0)
-  qrPackagingChargeEnabled  Boolean @default(false)
-  qrPackagingChargeAmount   Float   @default(0)
+  qrDeliveryChargeEnabled  Boolean @default(false)
+  qrDeliveryChargeAmount   Float   @default(0)
+  qrPackagingChargeEnabled Boolean @default(false)
+  qrPackagingChargeAmount  Float   @default(0)
 
   // ✅ Token Management
-  lastTokenNumber Int?      @default(0)
-  lastTokenDate   DateTime?
+  lastTokenNumber  Int?      @default(0)
+  lastTokenDate    DateTime?
   // ✅ Authentication Settings
-  enableClerkAuth  Boolean @default(true)
-  enableCustomAuth Boolean @default(false)
-  
-  // ✅ Atomic Bill Counter
-  billCounter      Int     @default(1)
+  enableClerkAuth  Boolean   @default(true)
+  enableCustomAuth Boolean   @default(false)
 
-  createdAt DateTime @default(now())
-  syncQuickPosWithKitchen Boolean @default(false)
-  multiZoneMenuEnabled    Boolean @default(false) // ✅ Multi-zone menu toggle
+  // ✅ Atomic Bill Counter
+  billCounter Int @default(1)
+
+  createdAt               DateTime @default(now())
+  syncQuickPosWithKitchen Boolean  @default(false)
+  multiZoneMenuEnabled    Boolean  @default(false) // ✅ Multi-zone menu toggle
   zones                   String[] @default([])
 
   // ✅ POS Checkout Visibility Settings
-  posCashEnabled     Boolean @default(true)
-  posUpiEnabled      Boolean @default(true)
-  posCardEnabled     Boolean @default(true)
-  posCounterEnabled  Boolean @default(true)
-  posWalletEnabled   Boolean @default(true)
-  posHoldEnabled     Boolean @default(true)
-  posSaveEnabled     Boolean @default(true)
-  posPreviewEnabled  Boolean @default(true)
-  posKotEnabled      Boolean @default(true)
+  posCashEnabled    Boolean @default(true)
+  posUpiEnabled     Boolean @default(true)
+  posCardEnabled    Boolean @default(true)
+  posCounterEnabled Boolean @default(true)
+  posWalletEnabled  Boolean @default(true)
+  posHoldEnabled    Boolean @default(true)
+  posSaveEnabled    Boolean @default(true)
+  posPreviewEnabled Boolean @default(true)
+  posKotEnabled     Boolean @default(true)
 
   // ✅ QR Menu Checkout Payment Visibility Settings
-  qrPayCashEnabled   Boolean @default(false)
-  qrPayUpiEnabled    Boolean @default(true)
-  qrPayCardEnabled   Boolean @default(false)
+  qrPayCashEnabled Boolean @default(false)
+  qrPayUpiEnabled  Boolean @default(true)
+  qrPayCardEnabled Boolean @default(false)
 
-  phonePrefixType         String? @default("TEXT") // "TEXT" (Mob:) or "SYMBOL"
-  printSettings           Json?   @default("{}")
-  reviewUrl               String?
+  phonePrefixType String? @default("TEXT") // "TEXT" (Mob:) or "SYMBOL"
+  printSettings   Json?   @default("{}")
+  reviewUrl       String?
 
   // ✅ QR Ordering Status & Timing
   isOnline       Boolean @default(true)
@@ -562,12 +562,12 @@ model BusinessProfile {
   offlineMessage String? @default("Restaurant is currently closed or not accepting orders.")
 
   // SaaS Subscription & Premium Popups
-  trialStartedAt    DateTime? @default(now())
-  isPremium         Boolean?  @default(false)
-  premiumEndDate    DateTime? // ✅ Track when premium expires
-  showPremiumPopup  Boolean?  @default(false)
-  isFrozen          Boolean?  @default(false)
-  
+  trialStartedAt   DateTime? @default(now())
+  isPremium        Boolean?  @default(false)
+  premiumEndDate   DateTime? // ✅ Track when premium expires
+  showPremiumPopup Boolean?  @default(false)
+  isFrozen         Boolean?  @default(false)
+
   expiryTrackingEnabled Boolean @default(false) // ✅ Added to toggle expiry feature
 
   // ✅ Inventory & Serial Number Tracking
@@ -584,15 +584,15 @@ model BusinessProfile {
 //////////////////////////////////////////////////
 
 model ManualInvoice {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
   clerkUserId String
-  user        User     @relation(fields: [clerkUserId], references: [clerkId])
+  user        User   @relation(fields: [clerkUserId], references: [clerkId])
 
   invoiceNumber String
   date          DateTime
   dueDate       DateTime? // Added Due Date / Validity
-  documentType  String   // "invoice" or "proforma"
-  
+  documentType  String // "invoice" or "proforma"
+
   customerName    String?
   customerPhone   String?
   customerEmail   String?
@@ -601,31 +601,31 @@ model ManualInvoice {
   customerState   String?
   customerPincode String?
   customerGst     String?
-  
-  companyInfo     Json? // { name, address, phone, email, gst, etc }
 
-  items Json // Array of { name, price, quantity, discountType, discountValue }
+  companyInfo Json? // { name, address, phone, email, gst, etc }
+
+  items   Json // Array of { name, price, quantity, discountType, discountValue }
   orderId String? @db.ObjectId
-  @@index([orderId])
 
-  subtotal    Float
-  discount    Float @default(0) // total discount amount applied
-  tax         Float @default(0)
-  total       Float
+  subtotal Float
+  discount Float @default(0) // total discount amount applied
+  tax      Float @default(0)
+  total    Float
 
   paymentMode String?
-  status      String @default("UNPAID") // UNPAID, PAID, CANCELLED
+  status      String  @default("UNPAID") // UNPAID, PAID, CANCELLED
 
   notes           String?
   bankDetails     String?
   termsConditions String?
   bankImage       String?
-  
-  pdfUrl      String?
+
+  pdfUrl String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([orderId])
   @@index([clerkUserId])
 }
 
@@ -637,17 +637,16 @@ model Expense {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   userId      String
   amount      Float
-  category    String   // Rent, Salaries, Ingredients, Utilities, Marketing, Others
+  category    String // Rent, Salaries, Ingredients, Utilities, Marketing, Others
   description String?
   date        DateTime @default(now())
-  paymentMode String?  // Cash, UPI, Card, Bank Transfer
+  paymentMode String? // Cash, UPI, Card, Bank Transfer
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([userId])
   @@index([date])
 }
-
 
 //////////////////////////////////////////////////
 // UPLOAD
@@ -688,29 +687,28 @@ model BillManager {
   billNumber String
   createdAt  DateTime @default(now())
 
-  items Json
+  items   Json
   orderId String? @db.ObjectId
-  @@index([orderId])
 
-  subtotal       Float
-  discountAmount Float?  @default(0)
-  discountCode   String?
+  subtotal         Float
+  discountAmount   Float?  @default(0)
+  discountCode     String?
   tax              Float?
-  deliveryCharges  Float? @default(0)
-  deliveryGst      Float? @default(0)
-  packagingCharges Float? @default(0)
-  packagingGst     Float? @default(0)
-  serviceCharge    Float? @default(0)
+  deliveryCharges  Float?  @default(0)
+  deliveryGst      Float?  @default(0)
+  packagingCharges Float?  @default(0)
+  packagingGst     Float?  @default(0)
+  serviceCharge    Float?  @default(0)
   total            Float
 
   paymentMode   String
   paymentStatus String // PAID, PENDING, PARTIAL
-  amountPaid    Float? @default(0) // ✅ Added for partial payments
-  balanceDue    Float? @default(0) // ✅ Added for partial payments
+  amountPaid    Float?  @default(0) // ✅ Added for partial payments
+  balanceDue    Float?  @default(0) // ✅ Added for partial payments
   upiTxnRef     String?
   isHeld        Boolean @default(false)
-  tokenNumber   Int?    // Legacy support
-  kotNumbers    Int[]   // Array of KOT/Token numbers
+  tokenNumber   Int? // Legacy support
+  kotNumbers    Int[] // Array of KOT/Token numbers
 
   customerName    String?
   customerPhone   String?
@@ -742,6 +740,7 @@ model BillManager {
   idempotencyKey    String? @unique // ✅ Added for safe retries and preventing duplicate bills
 
   @@unique([clerkUserId, billNumber]) // ✅ FIX: Global uniqueness changed to per-business uniqueness
+  @@index([orderId])
   @@index([clerkUserId])
   @@index([isDeleted, createdAt])
 }
@@ -852,21 +851,22 @@ model Backup {
   error     String?
   createdAt DateTime @default(now())
 }
+
 model Staff {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  name        String
-  phone       String?
-  email       String   @unique
-  password    String?
-  accessType  String
-  permissions String[]
-  businessId  String
-  status      String   @default("active")
-  publicMetadata  Json? @default("{}")
-  privateMetadata Json? @default("{}")
-  unsafeMetadata  Json? @default("{}")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  phone           String?
+  email           String   @unique
+  password        String?
+  accessType      String
+  permissions     String[]
+  businessId      String
+  status          String   @default("active")
+  publicMetadata  Json?    @default("{}")
+  privateMetadata Json?    @default("{}")
+  unsafeMetadata  Json?    @default("{}")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([businessId])
 }
@@ -876,15 +876,15 @@ model Staff {
 //////////////////////////////////////////////////
 
 model WalletTransaction {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  partyId     String   @db.ObjectId
-  party       Party    @relation(fields: [partyId], references: [id])
-  clerkId     String   // The business owner ID
-  type        String   // "CREDIT" (Deposit) | "DEBIT" (Payment)
-  amount      Float
-  description String?  // e.g., "Order #123" or "Manual Deposit"
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  partyId      String   @db.ObjectId
+  party        Party    @relation(fields: [partyId], references: [id])
+  clerkId      String // The business owner ID
+  type         String // "CREDIT" (Deposit) | "DEBIT" (Payment)
+  amount       Float
+  description  String? // e.g., "Order #123" or "Manual Deposit"
   paymentProof String?
-  createdAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
 
   @@index([partyId])
   @@index([clerkId])
@@ -904,18 +904,18 @@ model ExpenseCategory {
 }
 
 model SubscriptionOrder {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  merchantOrderId String   @unique
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  merchantOrderId String    @unique
   phonepeOrderId  String?
   clerkUserId     String
-  customer        Json     // { name, phone, email, house, addressLine, district, state, pincode }
-  items           Json     // Array of { id, name, price, quantity }
+  customer        Json // { name, phone, email, house, addressLine, district, state, pincode }
+  items           Json // Array of { id, name, price, quantity }
   amount          Float
-  paymentStatus   String   @default("PENDING") // PENDING, SUCCESS, FAILED
+  paymentStatus   String    @default("PENDING") // PENDING, SUCCESS, FAILED
   invoiceNumber   String?
   paidAt          DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([clerkUserId])
 }
@@ -931,23 +931,23 @@ model SystemSettings {
 }
 
 model GmailConnection {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  clerkUserId    String   @unique
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  clerkUserId    String    @unique
   accessToken    String?
   refreshToken   String?
   connectedEmail String?
-  isConnected    Boolean  @default(false)
+  isConnected    Boolean   @default(false)
   lastSynced     DateTime?
   lastEmailId    String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 model ExternalSales {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
   clerkUserId     String
   date            DateTime
-  platform        String   // "zomato" or "swiggy"
+  platform        String // "zomato" or "swiggy"
   totalOrders     Int      @default(0)
   totalRevenue    Float    @default(0.0)
   cancelledOrders Int      @default(0)
@@ -970,7 +970,7 @@ model ExternalSales {
 model HotelRoom {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   clerkUserId   String
-  roomNumber    String   // e.g. "101", "102", "201", "Suite 301"
+  roomNumber    String // e.g. "101", "102", "201", "Suite 301"
   roomType      String   @default("Standard") // Single, Double, Deluxe, Suite, Executive
   floor         String?  @default("Floor 1")
   pricePerNight Float    @default(1500)
@@ -987,7 +987,7 @@ model HotelRoom {
 model HotelBooking {
   id                 String    @id @default(auto()) @map("_id") @db.ObjectId
   clerkUserId        String
-  stayId             String?   // Unique reference ID e.g., STAY-2026-000125
+  stayId             String? // Unique reference ID e.g., STAY-2026-000125
   roomNumber         String
   roomId             String?   @db.ObjectId
   customerName       String
@@ -1022,17 +1022,17 @@ model HotelBooking {
 }
 
 model HotelPayment {
-  id                 String    @id @default(auto()) @map("_id") @db.ObjectId
-  clerkUserId        String
-  bookingId          String    @db.ObjectId
-  stayId             String?
-  amount             Float
-  paymentMode        String    @default("Cash") // Cash, UPI, Card, Other
-  paymentType        String    @default("ADVANCE") // ADVANCE, CHECKOUT, PARTIAL, REFUND
-  transactionId      String?
-  remarks            String?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  clerkUserId   String
+  bookingId     String   @db.ObjectId
+  stayId        String?
+  amount        Float
+  paymentMode   String   @default("Cash") // Cash, UPI, Card, Other
+  paymentType   String   @default("ADVANCE") // ADVANCE, CHECKOUT, PARTIAL, REFUND
+  transactionId String?
+  remarks       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([clerkUserId])
   @@index([bookingId])
@@ -1057,19 +1057,19 @@ model GoogleReviewQR {
 //////////////////////////////////////////////////
 
 model FuelBill {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
   clerkUserId String
-  user        User     @relation(fields: [clerkUserId], references: [clerkId])
-  
-  billNumber  String
-  vehicleNo   String?
-  fuelType    String
-  rate        Float
-  saleAmount  Float
-  volume      Float
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  user        User   @relation(fields: [clerkUserId], references: [clerkId])
+
+  billNumber String
+  vehicleNo  String?
+  fuelType   String
+  rate       Float
+  saleAmount Float
+  volume     Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([clerkUserId])
 }

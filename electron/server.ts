@@ -8,10 +8,50 @@ import multer from 'multer';
 import axios from 'axios';
 import * as xlsx from 'xlsx';
 import { extractRawTextLocally, parseMenuLocal } from './localOcr';
+import dotenv from 'dotenv';
+import path from 'path';
 
-const prisma = new PrismaClient();
+dotenv.config({ path: path.join(__dirname, '../.env') }); // For dev
+dotenv.config(); // fallback
+
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+});
 const app = express();
 const port = 15432;
+
+// --- DIAGNOSTIC LOGGER ---
+const fs = require('fs');
+const os = require('os');
+const logFile = path.join(os.homedir(), 'kravy_backend_log.txt');
+function writeLog(msg: string) {
+  try {
+    const time = new Date().toISOString();
+    fs.appendFileSync(logFile, `[${time}] ${msg}\n`);
+    console.log(msg);
+  } catch (e) {}
+}
+
+process.on('uncaughtException', (err) => {
+  writeLog(`UNCAUGHT EXCEPTION: ${err.message}\n${err.stack}`);
+});
+process.on('unhandledRejection', (reason, promise) => {
+  writeLog(`UNHANDLED REJECTION: ${reason}`);
+});
+
+writeLog(`Server script loaded. DATABASE_URL is ${process.env.DATABASE_URL ? 'SET' : 'UNDEFINED'}`);
+
+app.use((req, res, next) => {
+  if (req.path.includes('/login')) {
+    writeLog(`Incoming request: ${req.method} ${req.path}`);
+  }
+  next();
+});
+// -------------------------
 const JWT_SECRET = process.env.JWT_SECRET || "kravy_pos_secret_key_123";
 
 // Configure Multer for in-memory file uploads
@@ -32,7 +72,8 @@ app.post('/api/auth/login', async (req, res) => {
         OR: [
           { email: cleanIdentifier },
           { phone: cleanIdentifier },
-          { phone: { endsWith: cleanIdentifier.length >= 10 ? cleanIdentifier.slice(-10) : cleanIdentifier } }
+          { phone: { endsWith: cleanIdentifier.length >= 10 ? cleanIdentifier.slice(-10) : cleanIdentifier } },
+          { secondaryEmails: { has: cleanIdentifier } }
         ],
         isDisabled: false
       }
@@ -55,9 +96,9 @@ app.post('/api/auth/login', async (req, res) => {
       user: { id: user.id, name: user.name, email: user.email, role: user.role, clerkId: user.clerkId },
       token
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("LOGIN_ERROR:", error);
-    res.status(500).json({ error: "Login failed" });
+    res.status(500).json({ error: `Login failed: ${error?.message || "Unknown error"}` });
   }
 });
 
@@ -150,11 +191,9 @@ app.post('/api/menu/upload-ocr', upload.single('menuFile'), async (req, res) => 
         }
 
         const modelsToTry = [
-            "gemini-2.5-flash",
-            "gemini-2.0-flash",
-            "gemini-1.5-flash",
-            "gemini-2.5-flash-lite",
-            "gemini-2.0-flash-lite",
+            "gemini-1.5-pro-latest",
+            "gemini-3.6-flash",
+            "gemini-3.5-flash-lite",
             "gemini-flash-latest"
         ];
 
@@ -172,37 +211,32 @@ Your job is to read this document and extract EVERY single item with 100% precis
 
 CRITICAL INSTRUCTION: First, determine if this document is a FOOD menu (Restaurant/Cafe) OR a RETAIL/GENERAL product catalog (e.g. Hardware, Grocery, Electronics, Clothing).
 
-Also, please search the top/header/footer of the document to extract the business contact details if present:
-- Business/Restaurant Name
-- Address
-- Timings
-- Phone number
-
-Please return a structured JSON response matching the following structure:
+Also, please search the top/header/footer of the document to extract the business contact details if present: Please return a structured JSON response using ultra-short keys to save output tokens. MATCH EXACTLY this structure:
 {
-  "restaurantName": "Name of the business (or 'AI Scraped Business' if not found)",
-  "address": "Address if found (or 'Delhi NCR' if not found)",
-  "timings": "Timings if found (or '11:00 AM - 11:00 PM' if not found)",
-  "phone": "Phone number if found (or '9999999999' if not found)",
-  "menu": [
+  "r": "Business Name",
+  "a": "Address",
+  "ti": "Timings",
+  "ph": "Phone",
+  "m": [
     {
-      "category": "Logical Category Name",
-      "name": "Formatted Item Name. FOR FOOD ONLY: ALWAYS add the (V) or (NV) badge.",
-      "price": 250,
-      "type": "Pure Veg",
-      "description": "",
-      "variants": []
+      "c": "Category Name",
+      "n": "Item Name",
+      "p": 250,
+      "t": "Pure Veg"
     }
   ]
 }
 
 Strictly follow these rules:
-1. Return ONLY the raw JSON object. Do not add any conversational text. The JSON MUST NOT contain literal newlines inside string values. Please do not pretty-print.
-2. Group items under correct logical categories.
+1. Return ONLY the raw JSON object. Do not add any conversational text.
+2. Group items under correct categories.
 3. Normalize all spelling and format.
-4. Ensure the output is valid JSON. VERY IMPORTANT: You MUST properly escape any double quotes inside string values using a backslash (e.g., "name": "10\\" Pizza").
+4. Ensure the output is valid JSON. Do NOT output descriptions or variants.
 ${languageRule}
-6. EXTREME IMPORTANCE: DO NOT SKIP ANY ITEMS. YOU MUST EXTRACT EVERY SINGLE ROW, NO MATTER HOW LONG THE DOCUMENT IS. NEVER TRUNCATE OR USE ELLIPSES (...). EXTRACT 100% OF THE ITEMS.
+6. EXTREME IMPORTANCE: DO NOT SKIP ANY ITEMS. YOU MUST EXTRACT EVERY SINGLE ROW, NO MATTER HOW LONG THE DOCUMENT IS. NEVER TRUNCATE.
+7. THIS DOCUMENT CONTAINS MULTIPLE PAGES (often 10+ pages). You MUST read through EVERY single page from start to finish.
+8. Items that say "APS" or have no numeric price must be extracted as well. Just set "p": 0 for them.
+9. To save tokens and avoid truncation, do NOT include any white space or newlines in the JSON output. Make it a single, continuous string.
 `;
 
         const parseOnly = req.query.parseOnly === "true";
@@ -244,7 +278,7 @@ ${languageRule}
                             generationConfig: { responseMimeType: "application/json", maxOutputTokens: 8192 }
                         }, {
                             headers: { 'Content-Type': 'application/json' },
-                            timeout: 60000
+                            timeout: 300000
                         });
 
                         textResponse = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -254,24 +288,25 @@ ${languageRule}
                             break; // Break retry loop
                         }
                     } catch (err: any) {
-                        const is429 = err.response?.status === 429;
+                        const status = err.response?.status;
+                        const isRetryable = status === 429 || status === 503 || status === 500;
                         const errMsg = err.response?.data?.error?.message || err.message;
                         lastError = err;
                         
-                        if (is429) {
+                        if (isRetryable) {
                             if (attempt === maxRetries) {
-                                console.warn(`[Menu OCR AI Engine] Model ${model} rate limit (429) exceeded after max retries.`);
+                                console.warn(`[Menu OCR AI Engine] Model ${model} returned ${status} exceeded after max retries.`);
                                 break; // Break retry loop, move to next key/model
                             }
                             const delay = Math.min(60000, 5000 * Math.pow(2, attempt));
-                            console.warn(`[Menu OCR AI Engine] 429 received for ${model}. Retrying in ${delay / 1000}s...`);
+                            console.warn(`[Menu OCR AI Engine] ${status} received for ${model}. Retrying in ${delay / 1000}s...`);
                             await new Promise(resolve => setTimeout(resolve, delay));
                             attempt++;
                             continue;
                         }
                         
                         console.warn(`[Menu OCR AI Engine] Model ${model} failed: ${errMsg}`);
-                        break; // Break retry loop on non-429 error
+                        break; // Break retry loop on non-retryable error
                     }
                 }
                 if (textResponse) break; // Break API key loop
@@ -344,17 +379,24 @@ ${languageRule}
                 return res.status(500).json({ error: "Failed to parse and repair JSON response from AI." });
             }
         }
-        let menuItems = parsedMenu.menu || [];
+        let menuItems = (parsedMenu.m || parsedMenu.menu || []).map((item: any) => ({
+            category: item.c || item.category || "Uncategorized",
+            name: item.n || item.name || "Unnamed Item",
+            price: item.p || item.price || 0,
+            type: item.t || item.type || "Pure Veg",
+            description: item.d || item.description || "",
+            variants: item.v || item.variants || []
+        }));
 
-        console.log(`[Menu AI OCR Engine] Extracted ${menuItems.length} items successfully for ${parsedMenu.restaurantName} using model ${selectedModel}!`);
+        console.log(`[Menu AI OCR Engine] Extracted ${menuItems.length} items successfully for ${parsedMenu.r || parsedMenu.restaurantName} using model ${selectedModel}!`);
         return res.json({
             success: true,
             source: "ai-fallback",
             confidence: 100, // AI is highly confident by definition for now
-            restaurantName: parsedMenu.restaurantName || "AI Scraped Restaurant",
-            address: parsedMenu.address || "Delhi NCR",
-            timings: parsedMenu.timings || "11:00 AM - 11:00 PM",
-            phone: parsedMenu.phone || "9999999999",
+            restaurantName: parsedMenu.r || parsedMenu.restaurantName || "AI Scraped Restaurant",
+            address: parsedMenu.a || parsedMenu.address || "Delhi NCR",
+            timings: parsedMenu.ti || parsedMenu.timings || "11:00 AM - 11:00 PM",
+            phone: parsedMenu.ph || parsedMenu.phone || "9999999999",
             menu: menuItems
         });
 
@@ -590,7 +632,7 @@ app.post('/api/merchant/onboard', async (req, res) => {
                 const catId = categoryMap.get(catKey) || null;
                 
                 // Safeguard 5: Image Metadata mapping from img_status / assigned_image
-                const imageUrl = item.assigned_image && typeof item.assigned_image === 'string' ? item.assigned_image : null;
+                const imageUrl = (item.imageUrl && typeof item.imageUrl === 'string') ? item.imageUrl : (item.assigned_image && typeof item.assigned_image === 'string' ? item.assigned_image : null);
 
                 return {
                     name: item.name,
@@ -637,12 +679,91 @@ app.get('/api/menu/by-email', async (req, res) => {
             where: { userId: user.clerkId! }
         });
 
-        return res.json({ success: true, items, merchantName: profile?.businessName || user.name });
-    } catch (err: any) {
-        return res.status(500).json({ error: err.message });
+        // Ensure default zones are present
+        const defaultZones = ["MAIN KITCHEN", "BAR", "GRILL", "BAKERY", "COUNTER"];
+        const userZones = profile?.zones && profile.zones.length > 0 ? profile.zones : defaultZones;
+
+        res.json({ user, items, profile, zones: userZones });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
     }
 });
-app.post('/api/menu/items', async (req, res) => {
+
+// GET /api/profile/zones
+app.get('/api/profile/zones', async (req, res) => {
+    try {
+        const { email } = req.query;
+        if (!email || typeof email !== 'string') return res.status(400).json({ error: "Email query param required" });
+        const user = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
+        if (!user) return res.status(404).json({ error: "Merchant not found" });
+
+        const profile = await prisma.businessProfile.findFirst({ where: { userId: user.clerkId! } });
+        const defaultZones = ["MAIN KITCHEN", "BAR", "GRILL", "BAKERY", "COUNTER"];
+        const userZones = profile?.zones && profile.zones.length > 0 ? profile.zones : defaultZones;
+        res.json({ success: true, zones: userZones });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// POST /api/profile/zones
+app.post('/api/profile/zones', async (req, res) => {
+    try {
+        const { email, zoneName } = req.body;
+        if (!email || !zoneName) return res.status(400).json({ error: "Email and zoneName required" });
+
+        const user = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
+        if (!user) return res.status(404).json({ error: "Merchant not found" });
+
+        const profile = await prisma.businessProfile.findFirst({ where: { userId: user.clerkId! } });
+        if (!profile) return res.status(404).json({ error: "Profile not found" });
+
+        const newZone = zoneName.trim().toUpperCase();
+        const currentZones = profile.zones || ["MAIN KITCHEN", "BAR", "GRILL", "BAKERY", "COUNTER"];
+        
+        if (!currentZones.includes(newZone)) {
+            const updatedProfile = await prisma.businessProfile.update({
+                where: { id: profile.id },
+                data: { zones: [...currentZones, newZone] }
+            });
+            return res.json({ success: true, zones: updatedProfile.zones });
+        }
+        res.json({ success: true, zones: currentZones });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// PUT /api/items/bulk-update
+app.put('/api/items/bulk-update', async (req, res) => {
+    try {
+        const { email, ids, zones } = req.body;
+        if (!email || !ids || !Array.isArray(ids)) return res.status(400).json({ error: "Email and array of ids required" });
+
+        const user = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
+        if (!user) return res.status(404).json({ error: "Merchant not found" });
+
+        const updateData: any = {};
+        if (zones && Array.isArray(zones)) {
+            updateData.zones = zones.map(z => String(z).toUpperCase());
+        }
+
+        const result = await prisma.item.updateMany({
+            where: {
+                id: { in: ids },
+                clerkId: user.clerkId!
+            },
+            data: updateData
+        });
+
+        res.json({ success: true, updatedCount: result.count });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Add Item
+app.post('/api/menu/item', async (req, res) => {
     try {
         const { email, name, price, description, category, zones } = req.body;
         if (!email || !name || price === undefined) return res.status(400).json({ error: "Missing required fields" });
@@ -753,10 +874,10 @@ app.get('/api/merchants/search', async (req, res) => {
         const clerkIds = users.map(u => u.clerkId).filter(Boolean) as string[];
         const profiles = await prisma.businessProfile.findMany({
             where: { userId: { in: clerkIds } },
-            select: { userId: true, restaurantName: true }
+            select: { userId: true, businessName: true }
         });
 
-        const profileMap = new Map(profiles.map(p => [p.userId, p.restaurantName]));
+        const profileMap = new Map(profiles.map(p => [p.userId, p.businessName]));
 
         const results = users.map(u => ({
             email: u.email,
@@ -884,7 +1005,7 @@ app.delete('/api/merchant/bills/clear', async (req, res) => {
         if (!user) return res.status(404).json({ error: "Merchant not found" });
 
         await prisma.billManager.deleteMany({
-            where: { clerkId: user.clerkId! }
+            where: { clerkUserId: user.clerkId! }
         });
 
         return res.json({ success: true });
@@ -893,8 +1014,233 @@ app.delete('/api/merchant/bills/clear', async (req, res) => {
     }
 });
 
+// --- CATEGORY MANAGEMENT ROUTES --- //
+app.put('/api/menu/categories/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { email, name } = req.body;
+        
+        const user = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
+        if (!user) return res.status(403).json({ error: "Unauthorized" });
+
+        const category = await prisma.category.findFirst({ where: { id, clerkId: user.clerkId! } });
+        if (!category) return res.status(404).json({ error: "Category not found" });
+
+        const updated = await prisma.category.update({
+            where: { id },
+            data: { name: name.trim() }
+        });
+        return res.json({ success: true, category: updated });
+    } catch (err: any) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/menu/categories/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { email } = req.body;
+        
+        const user = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
+        if (!user) return res.status(403).json({ error: "Unauthorized" });
+
+        const category = await prisma.category.findFirst({ where: { id, clerkId: user.clerkId! } });
+        if (!category) return res.status(404).json({ error: "Category not found" });
+
+        // Delete all items in this category first
+        await prisma.item.deleteMany({ where: { categoryId: id } });
+        await prisma.category.delete({ where: { id } });
+
+        return res.json({ success: true });
+    } catch (err: any) {
+        return res.status(500).json({ error: err.message });
+    }
+});
+
+// --- FOODSNAP API PROXY --- //
+app.get('/api/images/search', async (req, res) => {
+    try {
+        const query = req.query.q as string || '';
+        const page = req.query.page as string || '1';
+        const limit = req.query.limit as string || '20';
+        
+        const foodSnapUrl = `https://manager.foodsnap.in/api/image/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`;
+        
+        // Fetch dynamically from FoodSnap
+        const response = await fetch(foodSnapUrl, { timeout: 10000 } as any);
+        if (!response.ok) throw new Error("FoodSnap API returned an error");
+        
+        const data = await response.json();
+        return res.json(data);
+    } catch (err: any) {
+        console.error("FoodSnap API Error:", err);
+        return res.status(500).json({ error: err.message, images: [] });
+    }
+});
+
+// ==========================================
+// SUPER ADMIN ACCESS CONTROL APIS
+// ==========================================
+
+app.get('/api/admin/users', async (req, res) => {
+    try {
+        const users = await prisma.user.findMany({
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                isDisabled: true,
+                clerkId: true
+            }
+        });
+        
+        const mappedUsers = users.map(u => ({
+            ...u,
+            loginType: u.clerkId ? "CLERK" : "CUSTOM"
+        }));
+        
+        res.json(mappedUsers);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/admin/users/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await prisma.user.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                isDisabled: true,
+                clerkId: true,
+                phone: true,
+                secondaryEmails: true,
+                secondaryPhones: true,
+                allowedPaths: true,
+                createdAt: true
+            }
+        });
+        if (!user) return res.status(404).json({ error: "User not found" });
+        
+        res.json({
+            ...user,
+            loginType: user.clerkId ? "CLERK" : "CUSTOM"
+        });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/admin/users', async (req, res) => {
+    try {
+        const { name, email, password, role } = req.body;
+        if (!name || !email || !password) return res.status(400).json({ error: "Missing required fields" });
+
+        const existing = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
+        if (existing) return res.status(400).json({ error: "Email already exists" });
+
+        const bcrypt = require('bcryptjs');
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        const newUser = await prisma.user.create({
+            data: {
+                name,
+                email: email.trim().toLowerCase(),
+                password: hashedPassword,
+                role: role || "USER",
+                isDisabled: false,
+                isVerified: true
+            }
+        });
+
+        res.json({ success: true, user: { id: newUser.id, name: newUser.name, email: newUser.email } });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.put('/api/admin/users', async (req, res) => {
+    try {
+        const { userId, name, password, secondaryEmails, secondaryPhones, allowedPaths, isDisabled, phone } = req.body;
+        if (!userId) return res.status(400).json({ error: "Missing userId" });
+
+        const updateData: any = {};
+        if (name !== undefined) updateData.name = name;
+        if (secondaryEmails !== undefined) updateData.secondaryEmails = secondaryEmails;
+        if (secondaryPhones !== undefined) updateData.secondaryPhones = secondaryPhones;
+        if (allowedPaths !== undefined) updateData.allowedPaths = allowedPaths;
+        if (isDisabled !== undefined) updateData.isDisabled = isDisabled;
+        if (phone !== undefined) updateData.phone = phone;
+
+        if (password) {
+            const bcrypt = require('bcryptjs');
+            updateData.password = await bcrypt.hash(password, 10);
+        }
+
+        const updated = await prisma.user.update({
+            where: { id: userId },
+            data: updateData
+        });
+
+        res.json({ success: true, updated: { id: updated.id } });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.put('/api/admin/users/role', async (req, res) => {
+    try {
+        const { targetUserId, role } = req.body;
+        if (!targetUserId || !role) return res.status(400).json({ error: "Missing targetUserId or role" });
+
+        const updated = await prisma.user.update({
+            where: { id: targetUserId },
+            data: { role }
+        });
+
+        res.json({ success: true, updated: { id: updated.id, role: updated.role } });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/admin/users/disable', async (req, res) => {
+    try {
+        const { targetUserId, disable } = req.body;
+        if (!targetUserId || disable === undefined) return res.status(400).json({ error: "Missing targetUserId or disable status" });
+
+        const updated = await prisma.user.update({
+            where: { id: targetUserId },
+            data: { isDisabled: disable }
+        });
+
+        res.json({ success: true, updated: { id: updated.id, isDisabled: updated.isDisabled } });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.delete('/api/admin/users', async (req, res) => {
+    try {
+        const { userId } = req.query;
+        if (!userId) return res.status(400).json({ error: "Missing userId" });
+
+        await prisma.user.delete({ where: { id: String(userId) } });
+
+        res.json({ success: true });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 export function startServer() {
   app.listen(port, () => {
-    console.log(`Lite API Server running on port ${port}`);
+    writeLog(`Lite API Server running on port ${port}`);
   });
 }
+
