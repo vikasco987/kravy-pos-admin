@@ -1,5 +1,11 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, dialog } = require('electron')
 const path = require('path')
+const { autoUpdater } = require('electron-updater');
+const log = require('electron-log');
+
+// Configure logging for auto-updater
+log.transports.file.level = "info";
+autoUpdater.logger = log;
 
 let mainWindow;
 
@@ -38,6 +44,9 @@ function createWindow() {
 app.whenReady().then(() => {
   createWindow()
 
+  // Check for updates when app is ready
+  autoUpdater.checkForUpdatesAndNotify();
+
   app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
@@ -51,3 +60,25 @@ app.whenReady().then(() => {
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit()
 })
+
+// Auto Updater Events
+autoUpdater.on('update-available', (info) => {
+  log.info('Update available.');
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+  log.info('Update downloaded');
+  const dialogOpts = {
+    type: 'info',
+    buttons: ['Restart and Install', 'Later'],
+    title: 'Application Update',
+    message: 'Naya version download ho gaya hai!',
+    detail: 'Kya aap app ko restart karke naya update install karna chahte hain?'
+  };
+
+  dialog.showMessageBox(dialogOpts).then((returnValue) => {
+    if (returnValue.response === 0) {
+      autoUpdater.quitAndInstall();
+    }
+  });
+});
