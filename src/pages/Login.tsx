@@ -202,25 +202,25 @@ export default function CustomAuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-4 selection:bg-emerald-500/30">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a] flex items-center justify-center p-4 selection:bg-emerald-500/30">
       {/* Background Orbs */}
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-500/10 blur-[120px] rounded-full animate-pulse" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full" />
       </div>
 
-      <div className="w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl animate-in fade-in zoom-in duration-500">
+      <div className="w-full max-w-md bg-white dark:bg-[#1A1A2E]/5 backdrop-blur-xl border border-gray-200 dark:border-white/10 rounded-3xl p-8 shadow-2xl animate-in fade-in zoom-in duration-500">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
+          <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-200 dark:border-emerald-500/20">
             {mode === 'forgot' || mode === 'reset' ? <KeyRound className="text-blue-500" size={32} /> : <ShieldCheck className="text-emerald-500" size={32} />}
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight">
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
             {mode === 'login' ? 'Welcome Back' : 
              mode === 'signup' ? 'Create Account' : 
              mode === 'verify' ? 'Verify Email' : 
              mode === 'forgot' ? 'Reset Password' : 'New Password'}
           </h1>
-          <p className="text-white/50 text-sm mt-2">
+          <p className="text-gray-500 dark:text-gray-300 dark:text-white/50 text-sm mt-2">
             {mode === 'login' ? 'Login to manage your business' : 
              mode === 'signup' ? 'Join the next-gen POS system' : 
              mode === 'forgot' ? 'Enter your email to receive OTP' :
@@ -232,7 +232,7 @@ export default function CustomAuthPage() {
         <form onSubmit={handleAction} className="space-y-4">
           {(mode === 'signup') && (
             <div className="relative group animate-in slide-in-from-top-2">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-emerald-500 transition-colors" size={18} />
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/30 group-focus-within:text-emerald-500 transition-colors" size={18} />
               <input
                 type="text"
                 name="name"
@@ -240,14 +240,14 @@ export default function CustomAuthPage() {
                 required
                 value={formData.name}
                 onChange={handleInputChange}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all"
+                className="w-full bg-white dark:bg-[#1A1A2E]/5 border border-gray-200 dark:border-white/10 rounded-2xl py-4 pl-12 pr-4 text-gray-900 dark:text-white placeholder:text-gray-400 dark:text-white/20 focus:outline-none focus:border-emerald-500/50 focus:bg-gray-50 dark:focus:bg-[#1A1A2E]/10 transition-all"
               />
             </div>
           )}
 
           {(mode === 'signup' || mode === 'forgot' || mode === 'reset') && (
             <div className="relative group animate-in slide-in-from-top-2">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-emerald-500 transition-colors" size={18} />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/30 group-focus-within:text-emerald-500 transition-colors" size={18} />
               <input
                 type="email"
                 name="email"
@@ -255,14 +255,14 @@ export default function CustomAuthPage() {
                 required
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all"
+                className="w-full bg-white dark:bg-[#1A1A2E]/5 border border-gray-200 dark:border-white/10 rounded-2xl py-4 pl-12 pr-4 text-gray-900 dark:text-white placeholder:text-gray-400 dark:text-white/20 focus:outline-none focus:border-emerald-500/50 focus:bg-gray-50 dark:focus:bg-[#1A1A2E]/10 transition-all"
               />
             </div>
           )}
 
           {mode === 'signup' && (
             <div className="relative group animate-in slide-in-from-top-2">
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-emerald-500 transition-colors" size={18} />
+              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/30 group-focus-within:text-emerald-500 transition-colors" size={18} />
               <input
                 type="tel"
                 name="phone"
@@ -270,14 +270,14 @@ export default function CustomAuthPage() {
                 required
                 value={formData.phone}
                 onChange={handleInputChange}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all"
+                className="w-full bg-white dark:bg-[#1A1A2E]/5 border border-gray-200 dark:border-white/10 rounded-2xl py-4 pl-12 pr-4 text-gray-900 dark:text-white placeholder:text-gray-400 dark:text-white/20 focus:outline-none focus:border-emerald-500/50 focus:bg-gray-50 dark:focus:bg-[#1A1A2E]/10 transition-all"
               />
             </div>
           )}
 
           {mode === 'login' && (
             <div className="relative group animate-in slide-in-from-top-2">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-emerald-500 transition-colors" size={18} />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/30 group-focus-within:text-emerald-500 transition-colors" size={18} />
               <input
                 type="text"
                 name="email"
@@ -285,14 +285,14 @@ export default function CustomAuthPage() {
                 required
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all"
+                className="w-full bg-white dark:bg-[#1A1A2E]/5 border border-gray-200 dark:border-white/10 rounded-2xl py-4 pl-12 pr-4 text-gray-900 dark:text-white placeholder:text-gray-400 dark:text-white/20 focus:outline-none focus:border-emerald-500/50 focus:bg-gray-50 dark:focus:bg-[#1A1A2E]/10 transition-all"
               />
             </div>
           )}
 
           {(mode === 'login' || mode === 'signup') && (
             <div className="relative group">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-emerald-500 transition-colors" size={18} />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/30 group-focus-within:text-emerald-500 transition-colors" size={18} />
               <input
                 type={showPassword ? "text" : "password"}
                 name="password"
@@ -300,12 +300,12 @@ export default function CustomAuthPage() {
                 required
                 value={formData.password}
                 onChange={handleInputChange}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-12 text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all"
+                className="w-full bg-white dark:bg-[#1A1A2E]/5 border border-gray-200 dark:border-white/10 rounded-2xl py-4 pl-12 pr-12 text-gray-900 dark:text-white placeholder:text-gray-400 dark:text-white/20 focus:outline-none focus:border-emerald-500/50 focus:bg-gray-50 dark:focus:bg-[#1A1A2E]/10 transition-all"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/60 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/20 hover:text-white/60 transition-colors"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -317,7 +317,7 @@ export default function CustomAuthPage() {
               <button 
                 type="button" 
                 onClick={() => setMode('forgot')}
-                className="text-xs font-bold text-white/30 hover:text-emerald-500 transition-colors uppercase tracking-widest"
+                className="text-xs font-bold text-gray-400 dark:text-white/30 hover:text-emerald-500 transition-colors uppercase tracking-widest"
               >
                 Forgot Password?
               </button>
@@ -326,7 +326,7 @@ export default function CustomAuthPage() {
 
           {mode === 'reset' && (
             <div className="relative group animate-in slide-in-from-bottom-2">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-blue-500 transition-colors" size={18} />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/30 group-focus-within:text-blue-500 transition-colors" size={18} />
               <input
                 type={showPassword ? "text" : "password"}
                 name="newPassword"
@@ -334,12 +334,12 @@ export default function CustomAuthPage() {
                 required
                 value={formData.newPassword}
                 onChange={handleInputChange}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-12 text-white placeholder:text-white/20 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all"
+                className="w-full bg-white dark:bg-[#1A1A2E]/5 border border-gray-200 dark:border-white/10 rounded-2xl py-4 pl-12 pr-12 text-gray-900 dark:text-white placeholder:text-gray-400 dark:text-white/20 focus:outline-none focus:border-blue-500/50 focus:bg-gray-50 dark:focus:bg-[#1A1A2E]/10 transition-all"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/60 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/20 hover:text-white/60 transition-colors"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -356,7 +356,7 @@ export default function CustomAuthPage() {
                     placeholder="Email Address"
                     disabled
                     value={formData.email}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-4 pr-4 text-white/40 focus:outline-none transition-all cursor-not-allowed text-sm"
+                    className="w-full bg-white dark:bg-[#1A1A2E]/5 border border-gray-200 dark:border-white/10 rounded-2xl py-4 pl-4 pr-4 text-gray-500 dark:text-white/40 focus:outline-none transition-all cursor-not-allowed text-sm"
                   />
                 </div>
               )}
@@ -370,7 +370,7 @@ export default function CustomAuthPage() {
                   autoFocus
                   value={formData.otp}
                   onChange={handleInputChange}
-                  className={`w-full ${mode === 'reset' ? 'bg-blue-500/5 border-blue-500/20 text-blue-500' : 'bg-emerald-500/5 border-emerald-500/20 text-emerald-500'} border-2 rounded-2xl py-5 px-4 text-center text-3xl font-black tracking-[0.5em] placeholder:text-white/5 focus:outline-none transition-all`}
+                  className={`w-full ${mode === 'reset' ? 'bg-blue-50 dark:bg-blue-500/5 border-blue-200 dark:border-blue-500/20 text-blue-500' : 'bg-emerald-50 dark:bg-emerald-500/5 border-emerald-200 dark:border-emerald-500/20 text-emerald-500'} border-2 rounded-2xl py-5 px-4 text-center text-3xl font-black tracking-[0.5em] placeholder:text-gray-300 dark:text-white/5 focus:outline-none transition-all`}
                 />
               </div>
               {mode === 'verify' && (
@@ -379,7 +379,7 @@ export default function CustomAuthPage() {
                     type="button" 
                     onClick={handleResendOTP}
                     disabled={loading}
-                    className="text-[10px] font-black text-white/30 hover:text-emerald-500 transition-colors uppercase tracking-[0.2em]"
+                    className="text-[10px] font-black text-gray-400 dark:text-white/30 hover:text-emerald-500 transition-colors uppercase tracking-[0.2em]"
                   >
                     Didn't receive code? Resend
                   </button>
@@ -407,28 +407,28 @@ export default function CustomAuthPage() {
           {/* Helper links */}
           <div className="mt-8 text-center text-sm">
             {mode === 'login' ? (
-              <p className="text-white/40 font-medium">
+              <p className="text-gray-500 dark:text-white/40 font-medium">
                 Don't have an account?{' '}
                 <button onClick={() => setMode('signup')} className="text-emerald-500 font-bold hover:underline ml-1">Sign Up</button>
               </p>
             ) : mode === 'signup' ? (
-              <p className="text-white/40 font-medium">
+              <p className="text-gray-500 dark:text-white/40 font-medium">
                 Already have an account?{' '}
                 <button onClick={() => setMode('login')} className="text-emerald-500 font-bold hover:underline ml-1">Log In</button>
               </p>
             ) : (
-              <button onClick={() => { setMode('login'); setShowPassword(false); }} className="text-white/20 text-xs mt-4 hover:text-white/40 transition-colors uppercase tracking-widest font-bold">Back to Login</button>
+              <button onClick={() => { setMode('login'); setShowPassword(false); }} className="text-gray-400 dark:text-white/20 text-xs mt-4 hover:text-gray-500 dark:text-white/40 transition-colors uppercase tracking-widest font-bold">Back to Login</button>
             )}
           </div>
           
           {/* Support Info */}
-          <div className="mt-6 pt-6 border-t border-white/10 text-center">
-            <p className="text-white/30 text-[10px] font-black uppercase tracking-widest mb-4">Need Help?</p>
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-white/10 text-center">
+            <p className="text-gray-400 dark:text-white/30 text-[10px] font-black uppercase tracking-widest mb-4">Need Help?</p>
             <div className="flex flex-col gap-3">
-              <a href="tel:+919403893991" className="flex items-center justify-center gap-2 text-white/50 hover:text-emerald-500 transition-colors text-xs font-bold bg-white/5 py-2 rounded-xl border border-white/5">
+              <a href="tel:+919403893991" className="flex items-center justify-center gap-2 text-gray-500 dark:text-gray-300 dark:text-white/50 hover:text-emerald-500 transition-colors text-xs font-bold bg-white dark:bg-[#1A1A2E]/5 py-2 rounded-xl border border-gray-200 dark:border-white/5">
                 <Phone size={14} /> Call Support: +91 9403893991
               </a>
-              <a href="https://wa.me/919289507882" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 text-white/50 hover:text-emerald-500 transition-colors text-xs font-bold bg-white/5 py-2 rounded-xl border border-white/5">
+              <a href="https://wa.me/919289507882" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 text-gray-500 dark:text-gray-300 dark:text-white/50 hover:text-emerald-500 transition-colors text-xs font-bold bg-white dark:bg-[#1A1A2E]/5 py-2 rounded-xl border border-gray-200 dark:border-white/5">
                 <MessageSquare size={14} /> WhatsApp: +91 9289507882
               </a>
             </div>

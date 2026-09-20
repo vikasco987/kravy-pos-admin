@@ -528,7 +528,7 @@ function SidebarItem({ item, index, isActive, collapsed, isDark, pathname }: any
 
 export default function Sidebar({ profile }: { profile?: any }) {
   const { collapsed, setCollapsed } = useSidebar();
-  const { resolvedTheme } = useTheme();
+  const { resolvedTheme, toggleTheme } = useTheme();
   const pathname = usePathname();
   const isDark = resolvedTheme === "dark";
   const [mounted, setMounted] = useState(false);
@@ -1002,6 +1002,51 @@ export default function Sidebar({ profile }: { profile?: any }) {
       });
         })()}
     </div>
+
+      {/* THEME TOGGLE SECTION */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7 }}
+        style={{
+          padding: collapsed ? "12px 0" : "12px 14px",
+          display: "flex",
+          justifyContent: "center",
+          borderTop: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.08)",
+        }}
+      >
+        <button
+          onClick={toggleTheme}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: collapsed ? "center" : "flex-start",
+            gap: "12px",
+            width: "100%",
+            padding: "10px",
+            borderRadius: "12px",
+            background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+            color: isDark ? "#E2E8F0" : "#1E293B",
+            border: "none",
+            cursor: "pointer",
+            transition: "all 0.3s ease",
+          }}
+          title={`Switch to ${isDark ? "Light" : "Dark"} Mode`}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)";
+          }}
+        >
+          {isDark ? <Sun size={18} color="#FBBF24" /> : <Moon size={18} color="#6366F1" />}
+          {!collapsed && (
+            <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>
+              {isDark ? "Light Mode" : "Dark Mode"}
+            </span>
+          )}
+        </button>
+      </motion.div>
 
       {/* USER SECTION AT BOTTOM */}
       <motion.div

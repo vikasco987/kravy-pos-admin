@@ -27,9 +27,8 @@ export default function BrowseProducts() {
     const [isAdding, setIsAdding] = useState(false);
     const [addForm, setAddForm] = useState({ name: '', price: '', description: '', category: '', zones: [] as string[] });
 
-    // AI Upload State
     const [isAIUploading, setIsAIUploading] = useState(false);
-    const [aiUploadFile, setAiUploadFile] = useState<File | null>(null);
+    const [aiUploadFiles, setAiUploadFiles] = useState<File[]>([]);
     const [aiUploadZone, setAiUploadZone] = useState<string>('');
     const [aiProcessing, setAiProcessing] = useState(false);
     
@@ -60,8 +59,8 @@ export default function BrowseProducts() {
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault();
         setIsDragOver(false);
-        if (e.dataTransfer.files?.[0]) {
-            setAiUploadFile(e.dataTransfer.files[0]);
+        if (e.dataTransfer.files?.length > 0) {
+            setAiUploadFiles(prev => [...prev, ...Array.from(e.dataTransfer.files!)]);
         }
     };
 
@@ -319,13 +318,14 @@ export default function BrowseProducts() {
     };
 
     const handleExtractMenu = async () => {
-        if (!aiUploadFile) return alert("Please select a file first");
+        if (aiUploadFiles.length === 0) return alert("Please select a file first");
         
         setAiProcessing(true);
         try {
-            // 1. OCR Upload
             const formData = new FormData();
-            formData.append('menuFile', aiUploadFile);
+            for (const file of aiUploadFiles) {
+                formData.append('menuFiles', file);
+            }
 
             const uploadRes = await fetch('http://localhost:15432/api/menu/upload-ocr', {
                 method: 'POST',
@@ -335,7 +335,8 @@ export default function BrowseProducts() {
             if (!uploadRes.ok) throw new Error(uploadData.error || 'OCR parsing failed');
             
             const parsedItems = uploadData.menu || uploadData.partsArray || [];
-            if (parsedItems.length === 0) throw new Error("No items found in the menu");
+            
+            if (parsedItems.length === 0) throw new Error("No items found in the uploaded menus");
 
             setAiProcessing(true); // Ensure UI shows loading
             const itemsWithImages = await Promise.all(
@@ -480,13 +481,13 @@ export default function BrowseProducts() {
                     <div className="flex justify-between items-center mb-6">
                         <div>
                             <h1 className="text-2xl font-black flex items-center gap-2"><Settings2 className="w-6 h-6 text-orange-500" /> Menu Viewer & Editor</h1>
-                            <p className="text-sm text-gray-500 mt-1">Advanced management interface for modifying merchant catalogs.</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Advanced management interface for modifying merchant catalogs.</p>
                         </div>
                     </div>
                     
                     <div className="flex items-end gap-4" ref={suggestionRef}>
                         <div className="flex-1 relative">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Merchant Email Search</label>
+                            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 block">Merchant Email Search</label>
                             <input 
                                 type="email" 
                                 value={email} 
@@ -538,9 +539,9 @@ export default function BrowseProducts() {
                                 <AlertTriangle className="w-5 h-5" /> Danger Zone Actions
                             </div>
                             <div className="flex items-center gap-3">
-                                <button onClick={() => handleClearMenu('All')} className="px-3 py-1.5 bg-white border border-red-200 text-red-600 rounded hover:bg-red-600 hover:text-white transition-colors text-xs font-bold flex items-center gap-1.5"><Ban className="w-3.5 h-3.5"/> Wipe Menu</button>
-                                <button onClick={handleClearImages} className="px-3 py-1.5 bg-white border border-red-200 text-red-600 rounded hover:bg-red-600 hover:text-white transition-colors text-xs font-bold flex items-center gap-1.5"><ImageIcon className="w-3.5 h-3.5"/> Clear Images</button>
-                                <button onClick={handleClearBills} className="px-3 py-1.5 bg-white border border-red-200 text-red-600 rounded hover:bg-red-600 hover:text-white transition-colors text-xs font-bold flex items-center gap-1.5"><Receipt className="w-3.5 h-3.5"/> Wipe Bills</button>
+                                <button onClick={() => handleClearMenu('All')} className="px-3 py-1.5 bg-white dark:bg-[#1A1A2E] border border-red-200 text-red-600 rounded hover:bg-red-600 hover:text-white transition-colors text-xs font-bold flex items-center gap-1.5"><Ban className="w-3.5 h-3.5"/> Wipe Menu</button>
+                                <button onClick={handleClearImages} className="px-3 py-1.5 bg-white dark:bg-[#1A1A2E] border border-red-200 text-red-600 rounded hover:bg-red-600 hover:text-white transition-colors text-xs font-bold flex items-center gap-1.5"><ImageIcon className="w-3.5 h-3.5"/> Clear Images</button>
+                                <button onClick={handleClearBills} className="px-3 py-1.5 bg-white dark:bg-[#1A1A2E] border border-red-200 text-red-600 rounded hover:bg-red-600 hover:text-white transition-colors text-xs font-bold flex items-center gap-1.5"><Receipt className="w-3.5 h-3.5"/> Wipe Bills</button>
                             </div>
                         </div>
 
@@ -553,7 +554,7 @@ export default function BrowseProducts() {
 
                             <div className="flex items-center gap-4">
                                 <div className="flex items-center gap-2">
-                                    <Filter className="w-4 h-4 text-gray-500" />
+                                    <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                                     <select 
                                         value={filterZone} 
                                         onChange={(e) => setFilterZone(e.target.value)}
@@ -567,7 +568,7 @@ export default function BrowseProducts() {
                                 <div className="flex gap-2">
                                     <button 
                                         onClick={() => setIsAdding(true)}
-                                        className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold px-4 py-2 rounded-lg flex items-center gap-2 text-sm hover:opacity-90 transition-opacity"
+                                        className="bg-gray-900 dark:bg-white dark:bg-[#1A1A2E] text-white dark:text-gray-900 dark:text-white font-bold px-4 py-2 rounded-lg flex items-center gap-2 text-sm hover:opacity-90 transition-opacity"
                                     >
                                         <Plus className="w-4 h-4" /> Add Item
                                     </button>
@@ -586,7 +587,7 @@ export default function BrowseProducts() {
                             <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/10 dark:to-blue-900/10 p-6 rounded-2xl border border-indigo-200 dark:border-indigo-800">
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="font-black text-xl text-indigo-900 dark:text-indigo-100 flex items-center gap-2"><Sparkles className="w-5 h-5 text-indigo-500"/> AI Menu Upload</h3>
-                                    <button onClick={() => setIsAIUploading(false)} className="text-gray-500 hover:text-red-500"><X className="w-5 h-5" /></button>
+                                    <button onClick={() => setIsAIUploading(false)} className="text-gray-500 dark:text-gray-400 hover:text-red-500"><X className="w-5 h-5" /></button>
                                 </div>
                                 <div className="flex gap-6 items-start">
                                     <div 
@@ -599,22 +600,54 @@ export default function BrowseProducts() {
                                             type="file" 
                                             id="ai-upload" 
                                             className="hidden" 
+                                            multiple
                                             accept="image/*,application/pdf,.xlsx,.xls,.csv,.doc,.docx"
-                                            onChange={e => setAiUploadFile(e.target.files?.[0] || null)}
+                                            onChange={e => setAiUploadFiles(prev => [...prev, ...(e.target.files ? Array.from(e.target.files) : [])])}
                                         />
-                                        <label htmlFor="ai-upload" className="cursor-pointer flex flex-col items-center">
-                                            <UploadCloud className={`w-10 h-10 mb-2 transition-colors ${isDragOver ? 'text-indigo-600' : 'text-indigo-400'}`} />
-                                            <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
-                                                {aiUploadFile ? aiUploadFile.name : "Drag & Drop or Click to Select Menu"}
-                                            </span>
-                                            <span className="text-[10px] text-gray-400 font-medium uppercase mt-1">
-                                                Image, PDF, Word, Excel
-                                            </span>
-                                        </label>
+                                        <div className="flex flex-col w-full h-full">
+                                            {aiUploadFiles.length > 0 ? (
+                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 w-full max-h-60 overflow-y-auto p-2">
+                                                    {aiUploadFiles.map((file, idx) => (
+                                                        <div key={idx} className="relative group rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 aspect-square flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800">
+                                                            {file.type.startsWith('image/') ? (
+                                                                <img src={URL.createObjectURL(file)} alt={file.name} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <UploadCloud className="w-8 h-8 text-indigo-400" />
+                                                            )}
+                                                            <button 
+                                                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAiUploadFiles(prev => prev.filter((_, i) => i !== idx)); }}
+                                                                className="absolute top-1 right-1 bg-black/50 hover:bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            >
+                                                                <X className="w-3 h-3" />
+                                                            </button>
+                                                            <div className="absolute inset-x-0 bottom-0 bg-black/70 p-1.5 truncate text-[10px] text-white text-center font-bold">
+                                                                {file.name}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                    <label htmlFor="ai-upload" className="cursor-pointer border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-indigo-400 rounded-xl aspect-square flex flex-col items-center justify-center bg-gray-50 dark:bg-[#0F0F23]/50 dark:bg-gray-800/50 transition-colors">
+                                                        <Plus className="w-6 h-6 text-gray-400" />
+                                                        <span className="text-[10px] text-gray-500 dark:text-gray-400 font-bold mt-1">Add More</span>
+                                                    </label>
+                                                </div>
+                                            ) : (
+                                                <label htmlFor="ai-upload" className="cursor-pointer flex flex-col items-center justify-center w-full h-full">
+                                                <>
+                                                    <UploadCloud className={`w-10 h-10 mb-2 transition-colors ${isDragOver ? 'text-indigo-600' : 'text-indigo-400'}`} />
+                                                    <span className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                                                        Drag & Drop or Click to Select Menu Files
+                                                    </span>
+                                                    <span className="text-[10px] text-gray-400 font-medium uppercase mt-1">
+                                                        Image, PDF, Word, Excel (Multiple allowed)
+                                                    </span>
+                                                </>
+                                                </label>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="flex-1 space-y-4">
                                         <div>
-                                            <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Target Zone (Optional)</label>
+                                            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase block mb-1">Target Zone (Optional)</label>
                                             <select 
                                                 value={aiUploadZone} 
                                                 onChange={e => {
@@ -646,7 +679,7 @@ export default function BrowseProducts() {
                                         </div>
                                         <button 
                                             onClick={handleExtractMenu}
-                                            disabled={!aiUploadFile || aiProcessing}
+                                            disabled={aiUploadFiles.length === 0 || aiProcessing}
                                             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg flex justify-center items-center gap-2 transition-all disabled:opacity-50"
                                         >
                                             {aiProcessing ? 'Extracting via AI...' : 'Preview Items'}
@@ -665,7 +698,7 @@ export default function BrowseProducts() {
                                             <h3 className="font-black text-xl text-indigo-900 dark:text-indigo-100 flex items-center gap-2"><Sparkles className="w-5 h-5 text-indigo-500"/> Parsed Menu Preview</h3>
                                             <p className="text-xs text-indigo-600 font-bold mt-1">Found {extractedMenuItems.length} items. Uncheck items you don't want to import.</p>
                                         </div>
-                                        <button onClick={() => setIsPreviewing(false)} className="text-gray-500 hover:text-red-500"><X className="w-5 h-5" /></button>
+                                        <button onClick={() => setIsPreviewing(false)} className="text-gray-500 dark:text-gray-400 hover:text-red-500"><X className="w-5 h-5" /></button>
                                     </div>
                                     
                                     <div className="p-6 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -673,7 +706,7 @@ export default function BrowseProducts() {
                                             <div 
                                                 key={idx} 
                                                 className={`bg-gray-50 dark:bg-gray-800/30 border rounded-xl p-4 flex items-center gap-4 transition-all ${
-                                                    item.checked ? "border-indigo-500 shadow-sm" : "border-gray-200 opacity-50"
+                                                    item.checked ? "border-indigo-500 shadow-sm" : "border-gray-200 dark:border-gray-800 opacity-50"
                                                 }`}
                                             >
                                                 <input
@@ -684,7 +717,7 @@ export default function BrowseProducts() {
                                                         newItems[idx].checked = e.target.checked;
                                                         setExtractedMenuItems(newItems);
                                                     }}
-                                                    className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                                    className="w-5 h-5 rounded border-gray-300 dark:border-gray-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                                                 />
                                                 <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 flex-shrink-0 overflow-hidden">
                                                     {item.imageUrl ? (
@@ -706,8 +739,8 @@ export default function BrowseProducts() {
                                         ))}
                                     </div>
                                     
-                                    <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3 bg-white dark:bg-[#1A1A2E]">
-                                        <button onClick={() => setIsPreviewing(false)} className="px-6 py-2 text-gray-500 hover:bg-gray-100 rounded-lg text-sm font-bold">Cancel</button>
+                                    <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex justify-end gap-3 bg-white dark:bg-[#1A1A2E]">
+                                        <button onClick={() => setIsPreviewing(false)} className="px-6 py-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 rounded-lg text-sm font-bold">Cancel</button>
                                         <button 
                                             onClick={handleConfirmUpload} 
                                             disabled={aiProcessing || extractedMenuItems.filter(i => i.checked).length === 0}
@@ -726,28 +759,28 @@ export default function BrowseProducts() {
                             <div className="bg-blue-50/50 dark:bg-blue-900/10 p-6 rounded-2xl border border-blue-200 dark:border-blue-800">
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="font-bold text-lg text-blue-900 dark:text-blue-100">Create New Item</h3>
-                                    <button onClick={() => setIsAdding(false)} className="text-gray-500 hover:text-red-500"><X className="w-5 h-5" /></button>
+                                    <button onClick={() => setIsAdding(false)} className="text-gray-500 dark:text-gray-400 hover:text-red-500"><X className="w-5 h-5" /></button>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                                     <div>
-                                        <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Name</label>
+                                        <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase block mb-1">Name</label>
                                         <input type="text" value={addForm.name} onChange={e => setAddForm({...addForm, name: e.target.value})} className="w-full bg-white dark:bg-[#1A1A2E] border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm" placeholder="e.g. Margherita Pizza" />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Price (₹)</label>
+                                        <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase block mb-1">Price (₹)</label>
                                         <input type="number" value={addForm.price} onChange={e => setAddForm({...addForm, price: e.target.value})} className="w-full bg-white dark:bg-[#1A1A2E] border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-green-600 font-bold" placeholder="299" />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Category</label>
+                                        <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase block mb-1">Category</label>
                                         <input type="text" value={addForm.category} onChange={e => setAddForm({...addForm, category: e.target.value})} className="w-full bg-white dark:bg-[#1A1A2E] border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm" placeholder="e.g. Italian" />
                                     </div>
                                     <div>
-                                        <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Description</label>
+                                        <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase block mb-1">Description</label>
                                         <input type="text" value={addForm.description} onChange={e => setAddForm({...addForm, description: e.target.value})} className="w-full bg-white dark:bg-[#1A1A2E] border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm" placeholder="Optional details..." />
                                     </div>
                                 </div>
                                 <div className="mb-6">
-                                    <label className="text-xs font-bold text-gray-500 uppercase block mb-2">Assign Zones</label>
+                                    <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase block mb-2">Assign Zones</label>
                                     <div className="flex flex-wrap gap-2">
                                         {DEFAULT_ZONES.map(zone => (
                                             <button 
@@ -773,7 +806,7 @@ export default function BrowseProducts() {
                             {Object.entries(groupedItems).length === 0 ? (
                                 <div className="bg-white dark:bg-[#1A1A2E] p-12 rounded-2xl border border-gray-200 dark:border-gray-800 text-center">
                                     <Tag className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                                    <h3 className="text-lg font-bold text-gray-500">No items found for this filter.</h3>
+                                    <h3 className="text-lg font-bold text-gray-500 dark:text-gray-400">No items found for this filter.</h3>
                                 </div>
                             ) : (
                                 Object.entries(groupedItems).map(([category, catData]) => (
@@ -786,10 +819,10 @@ export default function BrowseProducts() {
                                                     <input 
                                                         value={editCategoryName} 
                                                         onChange={e => setEditCategoryName(e.target.value)}
-                                                        className="px-3 py-1.5 text-lg font-black bg-white dark:bg-[#0F0F23] border border-gray-300 rounded outline-none"
+                                                        className="px-3 py-1.5 text-lg font-black bg-white dark:bg-[#0F0F23] border border-gray-300 dark:border-gray-700 rounded outline-none"
                                                     />
                                                     <button onClick={() => handleSaveCategory(catData.id)} className="bg-green-500 text-white p-1.5 rounded hover:bg-green-600"><Check className="w-4 h-4"/></button>
-                                                    <button onClick={() => setEditingCategory(null)} className="text-gray-500 p-1.5 hover:bg-gray-200 rounded"><X className="w-4 h-4"/></button>
+                                                    <button onClick={() => setEditingCategory(null)} className="text-gray-500 dark:text-gray-400 p-1.5 hover:bg-gray-200 rounded"><X className="w-4 h-4"/></button>
                                                 </div>
                                             ) : (
                                                 <div className="flex items-center gap-4">
@@ -833,14 +866,14 @@ export default function BrowseProducts() {
                                                                 <label className="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Zones</label>
                                                                 <div className="flex flex-wrap gap-1.5">
                                                                     {availableZones.map(zone => (
-                                                                        <button key={zone} onClick={() => toggleZone(zone, editForm, setEditForm)} className={`px-2 py-1 rounded text-[10px] font-bold border transition-colors ${editForm.zones.includes(zone) ? 'bg-orange-100 border-orange-300 text-orange-700' : 'bg-gray-50 border-gray-200 text-gray-500'}`}>
+                                                                        <button key={zone} onClick={() => toggleZone(zone, editForm, setEditForm)} className={`px-2 py-1 rounded text-[10px] font-bold border transition-colors ${editForm.zones.includes(zone) ? 'bg-orange-100 border-orange-300 text-orange-700' : 'bg-gray-50 dark:bg-[#0F0F23] border-gray-200 dark:border-gray-800 text-gray-500 dark:text-gray-400'}`}>
                                                                             {zone}
                                                                         </button>
                                                                     ))}
                                                                 </div>
                                                             </div>
                                                             <div className="flex gap-2 justify-end mt-4">
-                                                                <button onClick={() => setEditingItem(null)} className="px-3 py-1.5 text-gray-500 hover:bg-gray-100 rounded-lg text-sm font-bold">Cancel</button>
+                                                                <button onClick={() => setEditingItem(null)} className="px-3 py-1.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:bg-gray-800 rounded-lg text-sm font-bold">Cancel</button>
                                                                 <button onClick={handleEditSave} className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-sm font-bold flex items-center gap-1.5"><Save className="w-3.5 h-3.5" /> Save</button>
                                                             </div>
                                                         </div>
@@ -856,21 +889,21 @@ export default function BrowseProducts() {
                                                                             else newSet.add(item.id);
                                                                             setBulkSelectedIds(newSet);
                                                                         }} 
-                                                                        className={`p-1.5 rounded-full shadow-sm bg-white border ${bulkSelectedIds.has(item.id) ? 'border-indigo-500 bg-indigo-50 text-indigo-600' : 'border-gray-200 text-gray-300 hover:text-indigo-400'}`}
+                                                                        className={`p-1.5 rounded-full shadow-sm bg-white dark:bg-[#1A1A2E] border ${bulkSelectedIds.has(item.id) ? 'border-indigo-500 bg-indigo-50 text-indigo-600' : 'border-gray-200 dark:border-gray-800 text-gray-300 hover:text-indigo-400'}`}
                                                                         title="Select for bulk action"
                                                                     >
                                                                         <Check className="w-3 h-3" />
                                                                     </button>
-                                                                    <button onClick={() => handleToggleFavorite(item)} className={`p-1.5 rounded-full shadow-sm bg-white border ${item.isFavorite ? 'border-yellow-400 text-yellow-500' : 'border-gray-200 text-gray-300 hover:text-yellow-400'}`}>
+                                                                    <button onClick={() => handleToggleFavorite(item)} className={`p-1.5 rounded-full shadow-sm bg-white dark:bg-[#1A1A2E] border ${item.isFavorite ? 'border-yellow-400 text-yellow-500' : 'border-gray-200 dark:border-gray-800 text-gray-300 hover:text-yellow-400'}`}>
                                                                         <Star className="w-3 h-3" fill={item.isFavorite ? "currentColor" : "none"} />
                                                                     </button>
-                                                                    <button onClick={() => handleToggleActive(item)} className={`p-1.5 rounded-full shadow-sm bg-white border ${item.isActive ? 'border-green-400 text-green-500' : 'border-gray-200 text-gray-300 hover:text-green-500'}`}>
+                                                                    <button onClick={() => handleToggleActive(item)} className={`p-1.5 rounded-full shadow-sm bg-white dark:bg-[#1A1A2E] border ${item.isActive ? 'border-green-400 text-green-500' : 'border-gray-200 dark:border-gray-800 text-gray-300 hover:text-green-500'}`}>
                                                                         {item.isActive ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
                                                                     </button>
                                                                 </div>
 
                                                                 {/* IMAGE WITH FOODSNAP & REMOVE */}
-                                                                <div className="relative group/img w-20 h-20 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 cursor-pointer" 
+                                                                <div className="relative group/img w-20 h-20 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0 cursor-pointer" 
                                                                      onClick={() => { setFoodSnapItem(item); setFoodSnapQuery(item.name); searchFoodSnap(item.name); setIsFoodSnapOpen(true); }}
                                                                      title="Click to search FoodSnap for an image"
                                                                 >
@@ -915,10 +948,10 @@ export default function BrowseProducts() {
                                                             </div>
 
                                                             {/* Floating Actions on Hover */}
-                                                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1.5 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-1 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm z-20">
-                                                                <button onClick={() => openVariantModal(item)} className="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors" title="Manage Variants"><Settings2 className="w-3.5 h-3.5" /></button>
-                                                                <button onClick={() => handleEditStart(item)} className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Edit Item"><Edit2 className="w-3.5 h-3.5" /></button>
-                                                                <button onClick={() => handleDelete(item.id)} className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete Item"><Trash2 className="w-3.5 h-3.5" /></button>
+                                                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1.5 bg-white dark:bg-[#1A1A2E]/90 dark:bg-gray-900/90 backdrop-blur-sm p-1 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm z-20">
+                                                                <button onClick={() => openVariantModal(item)} className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors" title="Manage Variants"><Settings2 className="w-3.5 h-3.5" /></button>
+                                                                <button onClick={() => handleEditStart(item)} className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Edit Item"><Edit2 className="w-3.5 h-3.5" /></button>
+                                                                <button onClick={() => handleDelete(item.id)} className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete Item"><Trash2 className="w-3.5 h-3.5" /></button>
                                                             </div>
                                                         </>
                                                     )}
@@ -942,12 +975,12 @@ export default function BrowseProducts() {
                         <div className="bg-white dark:bg-[#1A1A2E] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
                             <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-indigo-50 dark:bg-indigo-900/20">
                                 <h3 className="font-black text-xl text-indigo-900 dark:text-indigo-100">Variant Editor: {variantItem.name}</h3>
-                                <button onClick={() => setIsVariantModalOpen(false)} className="text-gray-500 hover:text-red-500"><X className="w-5 h-5" /></button>
+                                <button onClick={() => setIsVariantModalOpen(false)} className="text-gray-500 dark:text-gray-400 hover:text-red-500"><X className="w-5 h-5" /></button>
                             </div>
                             
                             <div className="p-6 overflow-y-auto flex-1 space-y-6">
                                 {variantForm.length === 0 ? (
-                                    <div className="text-center py-10 text-gray-500">
+                                    <div className="text-center py-10 text-gray-500 dark:text-gray-400">
                                         <Settings2 className="w-12 h-12 mx-auto mb-3 opacity-20" />
                                         <p>No variants configured for this item.</p>
                                     </div>
@@ -956,18 +989,18 @@ export default function BrowseProducts() {
                                         <div key={gIdx} className="border border-indigo-100 rounded-xl p-4 bg-gray-50 dark:bg-gray-800/30">
                                             <div className="flex gap-4 mb-4 items-end">
                                                 <div className="flex-1">
-                                                    <label className="text-[10px] font-bold text-gray-500 uppercase">Group Name</label>
-                                                    <input type="text" value={group.groupName} onChange={e => updateVariantGroup(gIdx, { groupName: e.target.value })} className="w-full bg-white border border-gray-200 rounded px-3 py-2 text-sm font-bold mt-1" />
+                                                    <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Group Name</label>
+                                                    <input type="text" value={group.groupName} onChange={e => updateVariantGroup(gIdx, { groupName: e.target.value })} className="w-full bg-white dark:bg-[#1A1A2E] border border-gray-200 dark:border-gray-800 rounded px-3 py-2 text-sm font-bold mt-1" />
                                                 </div>
                                                 <div>
-                                                    <label className="text-[10px] font-bold text-gray-500 uppercase">Type</label>
-                                                    <select value={group.type} onChange={e => updateVariantGroup(gIdx, { type: e.target.value })} className="w-full bg-white border border-gray-200 rounded px-3 py-2 text-sm mt-1">
+                                                    <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Type</label>
+                                                    <select value={group.type} onChange={e => updateVariantGroup(gIdx, { type: e.target.value })} className="w-full bg-white dark:bg-[#1A1A2E] border border-gray-200 dark:border-gray-800 rounded px-3 py-2 text-sm mt-1">
                                                         <option value="radio">Single Choice (Radio)</option>
                                                         <option value="checkbox">Multiple (Checkbox)</option>
                                                     </select>
                                                 </div>
                                                 <div className="pb-2">
-                                                    <label className="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer">
+                                                    <label className="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 cursor-pointer">
                                                         <input type="checkbox" checked={group.required} onChange={e => updateVariantGroup(gIdx, { required: e.target.checked })} /> Required
                                                     </label>
                                                 </div>
@@ -976,9 +1009,9 @@ export default function BrowseProducts() {
                                             <div className="space-y-2 pl-4 border-l-2 border-indigo-200">
                                                 {group.options.map((opt: any, oIdx: number) => (
                                                     <div key={oIdx} className="flex gap-3 items-center">
-                                                        <input type="text" value={opt.name} onChange={e => updateVariantOption(gIdx, oIdx, { name: e.target.value })} className="flex-1 bg-white border border-gray-200 rounded px-2 py-1 text-sm" placeholder="Option Name" />
+                                                        <input type="text" value={opt.name} onChange={e => updateVariantOption(gIdx, oIdx, { name: e.target.value })} className="flex-1 bg-white dark:bg-[#1A1A2E] border border-gray-200 dark:border-gray-800 rounded px-2 py-1 text-sm" placeholder="Option Name" />
                                                         <span className="text-gray-400 font-bold">+₹</span>
-                                                        <input type="number" value={opt.price} onChange={e => updateVariantOption(gIdx, oIdx, { price: parseFloat(e.target.value) || 0 })} className="w-24 bg-white border border-gray-200 rounded px-2 py-1 text-sm font-bold text-green-600" placeholder="0" />
+                                                        <input type="number" value={opt.price} onChange={e => updateVariantOption(gIdx, oIdx, { price: parseFloat(e.target.value) || 0 })} className="w-24 bg-white dark:bg-[#1A1A2E] border border-gray-200 dark:border-gray-800 rounded px-2 py-1 text-sm font-bold text-green-600" placeholder="0" />
                                                         <button onClick={() => removeVariantOption(gIdx, oIdx)} className="text-red-500 hover:bg-red-50 p-1 rounded"><Trash2 className="w-4 h-4" /></button>
                                                     </div>
                                                 ))}
@@ -989,7 +1022,7 @@ export default function BrowseProducts() {
                                 )}
                             </div>
                             
-                            <div className="px-6 py-4 border-t border-gray-200 flex justify-between bg-white dark:bg-[#1A1A2E]">
+                            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800 flex justify-between bg-white dark:bg-[#1A1A2E]">
                                 <button onClick={addVariantGroup} className="text-sm font-bold text-indigo-600 flex items-center gap-2 px-4 py-2 hover:bg-indigo-50 rounded-lg"><Plus className="w-4 h-4" /> Add Variant Group</button>
                                 <button onClick={handleSaveVariants} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2 rounded-lg flex items-center gap-2"><Save className="w-4 h-4"/> Save JSON</button>
                             </div>
@@ -1006,16 +1039,16 @@ export default function BrowseProducts() {
                                     <h3 className="font-black text-xl text-emerald-900 dark:text-emerald-100 flex items-center gap-2"><Sparkles className="w-5 h-5 text-emerald-500"/> FoodSnap DB Search</h3>
                                     <p className="text-xs text-emerald-600 font-bold mt-1">Select an image for: {foodSnapItem.name}</p>
                                 </div>
-                                <button onClick={() => setIsFoodSnapOpen(false)} className="text-gray-500 hover:text-red-500"><X className="w-5 h-5" /></button>
+                                <button onClick={() => setIsFoodSnapOpen(false)} className="text-gray-500 dark:text-gray-400 hover:text-red-500"><X className="w-5 h-5" /></button>
                             </div>
                             
-                            <div className="p-6 border-b border-gray-200 flex gap-4 relative">
+                            <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex gap-4 relative">
                                 <input 
                                     type="text" 
                                     value={foodSnapQuery} 
                                     onChange={e => setFoodSnapQuery(e.target.value)}
                                     onKeyDown={e => e.key === 'Enter' && searchFoodSnap()}
-                                    className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-emerald-500"
+                                    className="flex-1 bg-gray-50 dark:bg-[#0F0F23] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-emerald-500"
                                     placeholder="Search food items..."
                                 />
                                 <button onClick={() => searchFoodSnap()} className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 rounded-xl flex items-center gap-2">
@@ -1030,7 +1063,7 @@ export default function BrowseProducts() {
                                         <span className="font-bold">Fetching from FoodSnap...</span>
                                     </div>
                                 ) : foodSnapResults.length === 0 ? (
-                                    <div className="text-center py-20 text-gray-500">
+                                    <div className="text-center py-20 text-gray-500 dark:text-gray-400">
                                         No images found for "{foodSnapQuery}".
                                     </div>
                                 ) : (
@@ -1038,10 +1071,10 @@ export default function BrowseProducts() {
                                         {foodSnapResults.map((img: any, idx: number) => (
                                             <div 
                                                 key={idx} 
-                                                onClick={() => applyFoodSnapImage(img.url || img.imageUrl || img)}
-                                                className="aspect-square rounded-xl overflow-hidden border border-gray-200 cursor-pointer hover:border-emerald-500 hover:shadow-lg transition-all group/fimg relative"
+                                                onClick={() => applyFoodSnapImage(img.image_url || img.imageUrl || img.url)}
+                                                className="aspect-square rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 cursor-pointer hover:border-emerald-500 hover:shadow-lg transition-all group/fimg relative"
                                             >
-                                                <img src={img.url || img.imageUrl || img} alt="FoodSnap Result" className="w-full h-full object-cover" />
+                                                <img src={img.image_url || img.imageUrl || img.url} alt="FoodSnap Result" className="w-full h-full object-cover" />
                                                 <div className="absolute inset-0 bg-emerald-500/80 flex items-center justify-center opacity-0 group-hover/fimg:opacity-100 transition-opacity">
                                                     <span className="text-white font-black text-sm uppercase tracking-wider">Select</span>
                                                 </div>
@@ -1056,13 +1089,13 @@ export default function BrowseProducts() {
 
                 {/* Bulk Action Bar */}
                 {bulkSelectedIds.size > 0 && (
-                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl shadow-2xl px-6 py-4 flex items-center gap-6 z-40 border border-gray-700 dark:border-gray-200">
+                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 dark:bg-white dark:bg-[#1A1A2E] text-white dark:text-gray-900 dark:text-white rounded-2xl shadow-2xl px-6 py-4 flex items-center gap-6 z-40 border border-gray-700 dark:border-gray-200 dark:border-gray-800">
                         <div className="flex items-center gap-2">
                             <span className="font-black text-xl">{bulkSelectedIds.size}</span>
                             <span className="text-xs font-bold uppercase tracking-wider opacity-70">Items Selected</span>
                         </div>
                         
-                        <div className="h-8 w-[1px] bg-white/20 dark:bg-black/20"></div>
+                        <div className="h-8 w-[1px] bg-white dark:bg-[#1A1A2E]/20 dark:bg-black/20"></div>
                         
                         <div className="flex items-center gap-3">
                             <select 
@@ -1087,11 +1120,11 @@ export default function BrowseProducts() {
                                         setBulkZone(e.target.value)
                                     }
                                 }}
-                                className="bg-white/10 dark:bg-black/5 border border-white/20 dark:border-black/10 rounded-lg px-3 py-2 text-sm font-bold outline-none cursor-pointer"
+                                className="bg-white dark:bg-[#1A1A2E]/10 dark:bg-black/5 border border-white/20 dark:border-black/10 rounded-lg px-3 py-2 text-sm font-bold outline-none cursor-pointer"
                             >
-                                <option value="" className="bg-gray-900 dark:bg-white">Select Target Zone</option>
+                                <option value="" className="bg-gray-900 dark:bg-white dark:bg-[#1A1A2E]">Select Target Zone</option>
                                 <option value="CREATE_NEW_ZONE" className="bg-indigo-900 text-indigo-100 dark:bg-indigo-100 dark:text-indigo-900">+ Create New Zone</option>
-                                {availableZones.map(z => <option key={z} value={z} className="bg-gray-900 dark:bg-white">{z}</option>)}
+                                {availableZones.map(z => <option key={z} value={z} className="bg-gray-900 dark:bg-white dark:bg-[#1A1A2E]">{z}</option>)}
                             </select>
                             
                             <button 
@@ -1122,7 +1155,7 @@ export default function BrowseProducts() {
                                 {isBulkUpdating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                 Apply Transfer
                             </button>
-                            <button onClick={() => setBulkSelectedIds(new Set())} className="p-2 hover:bg-white/10 dark:hover:bg-black/5 rounded-full transition-colors ml-2">
+                            <button onClick={() => setBulkSelectedIds(new Set())} className="p-2 hover:bg-white dark:bg-[#1A1A2E]/10 dark:hover:bg-black/5 rounded-full transition-colors ml-2">
                                 <X className="w-4 h-4" />
                             </button>
                         </div>

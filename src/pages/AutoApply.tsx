@@ -26,8 +26,8 @@ export default function AutoApplyClient() {
     const [globalZone, setGlobalZone] = useState("");
     const processingRef = useRef(false);
 
-    const [ocrStatus, setOcrStatus] = useState({ text: "Pending", colorClass: "text-gray-500", isLoading: false });
-    const [imgStatus, setImgStatus] = useState({ text: "Pending", colorClass: "text-gray-500", isLoading: false });
+    const [ocrStatus, setOcrStatus] = useState({ text: "Pending", colorClass: "text-gray-500 dark:text-gray-400", isLoading: false });
+    const [imgStatus, setImgStatus] = useState({ text: "Pending", colorClass: "text-gray-500 dark:text-gray-400", isLoading: false });
     
     const [progress, setProgress] = useState({ completed: 0, total: 0 });
 
@@ -144,55 +144,49 @@ export default function AutoApplyClient() {
         let combinedMenu: any[] = [];
         let lastSuccessData: any = null;
 
-        for (let file of filesToProcess) {
-            currentFileIdx++;
-            setOcrStatus({ text: `Processing ${currentFileIdx}/${totalFiles} (Local OCR + AI Fallback)...`, colorClass: "text-orange-500", isLoading: true });
-            
-            try {
-                const formData = new FormData();
-                formData.append("menuFile", file);
-                formData.append("languagePref", aiLanguagePref);
-                
-                // Send file to secure backend for complete AI OCR extraction
-                const ocrRes = await fetch("http://localhost:15432/api/menu/upload-ocr", {
-                    method: "POST",
-                    body: formData
-                });
-                
-                if (!ocrRes.ok) {
-                    let errorText = await ocrRes.text();
-                    try {
-                        const errJson = JSON.parse(errorText);
-                        errorText = errJson.error || errorText;
-                    } catch (e) {}
-                    throw new Error(`AI Extraction Failed: ${errorText}`);
-                }
-                
-                const ocrData = await ocrRes.json();
-                if (!ocrData.success) {
-                    throw new Error(ocrData.error || "Failed to process menu via AI");
-                }
-                
-                const menuItems = ocrData.menu || [];
-                
-                if (menuItems.length > 0) {
-                    combinedMenu = combinedMenu.concat(menuItems.map((e: any) => ({ ...e, assigned_image: null, img_status: 'waiting' })));
-                    lastSuccessData = ocrData;
-                    
-                    if (ocrData.source === 'local') {
-                        setOcrStatus({ text: "🔍 Local OCR (Parsed locally)", colorClass: "text-emerald-500", isLoading: false });
-                    } else {
-                        setOcrStatus({ text: "🤖 AI Fallback (Local confidence low)", colorClass: "text-blue-500", isLoading: false });
-                    }
-                } else {
-                    throw new Error("No items were extracted");
-                }
-            } catch (err: any) {
-                console.error("Error processing file", file.name, err);
-                alert(`Upload Failed for ${file.name}:\n\n${err.message}`);
+        try {
+            const formData = new FormData();
+            for (let file of filesToProcess) {
+                formData.append("menuFiles", file);
             }
-            // Add a small delay between files to prevent rapid-fire requests to Gemini
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            formData.append("languagePref", aiLanguagePref);
+            
+            // Send files to secure backend for complete AI OCR extraction
+            const ocrRes = await fetch("http://localhost:15432/api/menu/upload-ocr", {
+                method: "POST",
+                body: formData
+            });
+            
+            if (!ocrRes.ok) {
+                let errorText = await ocrRes.text();
+                try {
+                    const errJson = JSON.parse(errorText);
+                    errorText = errJson.error || errorText;
+                } catch (e) {}
+                throw new Error(`AI Extraction Failed: ${errorText}`);
+            }
+            
+            const ocrData = await ocrRes.json();
+            if (!ocrData.success) {
+                throw new Error(ocrData.error || "Failed to process menu via AI");
+            }
+            
+            const menuItems = ocrData.menu || [];
+            
+            if (menuItems.length > 0) {
+                combinedMenu = menuItems.map((e: any) => ({ ...e, assigned_image: null, img_status: 'waiting' }));
+                
+                if (ocrData.source === 'local') {
+                    setOcrStatus({ text: "🔍 Local OCR (Parsed locally)", colorClass: "text-emerald-500", isLoading: false });
+                } else {
+                    setOcrStatus({ text: "🤖 AI Extracted (Full Context)", colorClass: "text-blue-500", isLoading: false });
+                }
+            } else {
+                throw new Error("No items were extracted");
+            }
+        } catch (err: any) {
+            console.error("Error processing files", err);
+            alert(`Upload Failed:\n\n${err.message}`);
         }
 
         if (combinedMenu.length > 0) {
@@ -458,7 +452,7 @@ export default function AutoApplyClient() {
                             <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 block mb-1.5">Password *</label>
                             <div className="relative">
                                 <input type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-gray-50 dark:bg-[#0F0F23] border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-2.5 pr-14 text-gray-900 dark:text-white text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none transition-all" />
-                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-white text-[10px] font-bold uppercase">
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-white text-[10px] font-bold uppercase">
                                     {showPassword ? "HIDE" : "SHOW"}
                                 </button>
                             </div>
@@ -532,7 +526,11 @@ export default function AutoApplyClient() {
                                 {fileQueue.map((file, idx) => (
                                     <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-[#0F0F23] rounded-lg border border-gray-100 dark:border-gray-800">
                                         <div className="flex items-center gap-2 overflow-hidden">
-                                            <ScanText className="w-3.5 h-3.5 text-orange-500 flex-shrink-0" />
+                                            {file.type.startsWith('image/') ? (
+                                                <img src={URL.createObjectURL(file)} alt="preview" className="w-6 h-6 object-cover rounded flex-shrink-0 border border-gray-200 dark:border-gray-700" />
+                                            ) : (
+                                                <ScanText className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                                            )}
                                             <span className="text-[11px] text-gray-700 dark:text-gray-300 font-medium truncate max-w-[150px]" title={file.name}>{file.name}</span>
                                         </div>
                                         <button onClick={() => removeFileFromQueue(idx)} className="text-red-400 hover:text-red-500">
@@ -620,7 +618,7 @@ export default function AutoApplyClient() {
                 
                 <div className="flex-1 overflow-y-auto no-scrollbar grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 pb-4">
                     {extractedItems.length === 0 ? (
-                        <div className="col-span-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 h-64 gap-3">
+                        <div className="col-span-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 dark:text-gray-400 h-64 gap-3">
                             <ImageIcon className="w-10 h-10 opacity-50" />
                             <p className="text-sm font-medium">Upload a menu file to populate this grid.</p>
                         </div>
@@ -668,12 +666,12 @@ export default function AutoApplyClient() {
                 <>
                     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[250] transition-opacity" onClick={() => setSidebarOpen(false)}></div>
                     <div className="fixed top-0 right-0 h-full w-[380px] max-w-[90vw] bg-white dark:bg-[#0a0a0c] border-l border-gray-200 dark:border-white/10 z-[300] shadow-2xl flex flex-col">
-                        <div className="p-5 border-b border-gray-200 dark:border-white/10 flex items-center justify-between bg-gray-50 dark:bg-white/5">
+                        <div className="p-5 border-b border-gray-200 dark:border-white/10 flex items-center justify-between bg-gray-50 dark:bg-white dark:bg-[#1A1A2E]/5">
                             <div>
                                 <h3 className="text-base font-bold text-gray-900 dark:text-white">Image Selector</h3>
                                 <p className="text-xs text-orange-500 mt-0.5 font-medium truncate w-56">{extractedItems[sidebarItemIndex]?.name}</p>
                             </div>
-                            <button onClick={() => setSidebarOpen(false)} className="w-8 h-8 rounded-full bg-gray-200 dark:bg-white/5 hover:bg-gray-300 dark:hover:bg-red-500/20 text-gray-600 dark:text-white hover:text-red-500 flex items-center justify-center transition-colors">
+                            <button onClick={() => setSidebarOpen(false)} className="w-8 h-8 rounded-full bg-gray-200 dark:bg-white dark:bg-[#1A1A2E]/5 hover:bg-gray-300 dark:hover:bg-red-500/20 text-gray-600 dark:text-white hover:text-red-500 flex items-center justify-center transition-colors">
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
@@ -681,7 +679,7 @@ export default function AutoApplyClient() {
                         <div className="p-4 border-b border-gray-200 dark:border-white/5 bg-white dark:bg-black/20 space-y-3">
                             <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-white/60">Search Database</label>
                             <div className="flex gap-2">
-                                <input type="text" value={sidebarQuery} onChange={e => setSidebarQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchSidebarImages(sidebarQuery, false)} className="flex-1 bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2 text-gray-900 dark:text-white text-xs focus:border-orange-500 focus:outline-none" placeholder="Search..." />
+                                <input type="text" value={sidebarQuery} onChange={e => setSidebarQuery(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchSidebarImages(sidebarQuery, false)} className="flex-1 bg-gray-100 dark:bg-white dark:bg-[#1A1A2E]/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2 text-gray-900 dark:text-white text-xs focus:border-orange-500 focus:outline-none" placeholder="Search..." />
                                 <button onClick={() => searchSidebarImages(sidebarQuery, false)} className="px-3 py-2 bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400 hover:bg-orange-500 hover:text-white dark:hover:text-black rounded-xl font-bold transition-colors" title="Search FoodSnap Database">
                                     <Search className="w-4 h-4" />
                                 </button>
@@ -737,7 +735,7 @@ export default function AutoApplyClient() {
                         </div>
 
                         <div className="flex gap-3">
-                            <button onClick={() => setShowSuccessModal(false)} className="flex-1 py-3 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 text-gray-700 dark:text-white rounded-xl font-bold text-xs transition-colors">
+                            <button onClick={() => setShowSuccessModal(false)} className="flex-1 py-3 bg-gray-100 dark:bg-white dark:bg-[#1A1A2E]/5 hover:bg-gray-200 text-gray-700 dark:text-white rounded-xl font-bold text-xs transition-colors">
                                 Close
                             </button>
                             <button onClick={copyOnboardCredentials} className="flex-[2] py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-2">

@@ -103,12 +103,12 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // Menu AI OCR Engine
-app.post('/api/menu/upload-ocr', upload.single('menuFile'), async (req, res) => {
+app.post('/api/menu/upload-ocr', upload.any(), async (req, res) => {
     try {
-        const file = req.file;
+        const files = (req.files as Express.Multer.File[]) || (req.file ? [req.file] : []);
 
-        if (!file) {
-            return res.status(400).json({ error: "No menu file uploaded." });
+        if (!files || files.length === 0) {
+            return res.status(400).json({ error: "No menu files uploaded." });
         }
 
         const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
@@ -116,58 +116,85 @@ app.post('/api/menu/upload-ocr', upload.single('menuFile'), async (req, res) => 
             return res.status(500).json({ error: "GEMINI_API_KEY / GOOGLE_API_KEY is not configured in the server's .env file." });
         }
 
-        const buffer = file.buffer;
-        let mimeType = file.mimetype;
-        const fileName = file.originalname.toLowerCase();
-        const base64Data = buffer.toString("base64");
+        let inlineDataParts: any[] = [];
+        let excelTextParts: any[] = [];
+        let firstFileName = files[0].originalname;
 
-        console.log(`[Menu AI OCR Engine] Processing uploaded file: Name = ${file.originalname}, Mime = ${mimeType}, Size = ${buffer.byteLength} bytes`);
-        let inlineDataPart = null;
-        let excelTextPart = null;
+        for (const file of files) {
+            const buffer = file.buffer;
+            let mimeType = file.mimetype;
+            const fileName = file.originalname.toLowerCase();
+            const base64Data = buffer.toString("base64");
 
-        if (mimeType.includes("spreadsheetml") || mimeType.includes("excel") || mimeType.includes("csv") || fileName.endsWith(".xlsx") || fileName.endsWith(".xls") || fileName.endsWith(".csv")) {
-            console.log("Detected Excel/CSV file! Parsing with xlsx package before sending to Gemini...");
-            const workbook = xlsx.read(buffer, { type: "buffer" });
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            const csvData = xlsx.utils.sheet_to_csv(worksheet);
-            excelTextPart = { text: "Here is the parsed spreadsheet content in CSV format:\n" + csvData };
-        } else if (mimeType.includes("wordprocessingml") || mimeType.includes("msword") || fileName.endsWith(".docx") || fileName.endsWith(".doc")) {
-            console.log("Detected Word document! Parsing with mammoth before sending to Gemini...");
-            try {
-                const mammoth = require("mammoth");
-                const docxResult = await mammoth.extractRawText({ buffer });
-                excelTextPart = { text: "Here is the parsed Word document content:\n" + docxResult.value };
-            } catch (e) {
-                console.error("Mammoth failed to load or parse:", e);
-                excelTextPart = { text: "Failed to parse word document." };
-            }
-        } else {
-            let actualMime = mimeType;
-            if (!actualMime || actualMime === "application/octet-stream") {
-                if (fileName.endsWith(".pdf")) actualMime = "application/pdf";
-                else if (fileName.endsWith(".png")) actualMime = "image/png";
-                else if (fileName.endsWith(".webp")) actualMime = "image/webp";
-                else actualMime = "image/jpeg";
-            }
-            mimeType = actualMime; // update for later
-            inlineDataPart = {
-                inlineData: {
-                    mimeType: actualMime,
-                    data: base64Data
+            console.log(`[Menu AI OCR Engine] Processing uploaded file: Name = ${file.originalname}, Mime = ${mimeType}, Size = ${buffer.byteLength} bytes`);
+
+            if (mimeType.includes("spreadsheetml") || mimeType.includes("excel") || mimeType.includes("csv") || fileName.endsWith(".xlsx") || fileName.endsWith(".xls") || fileName.endsWith(".csv")) {
+                console.log("Detected Excel/CSV file! Parsing with xlsx package before sending to Gemini...");
+                const workbook = xlsx.read(buffer, { type: "buffer" });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const csvData = xlsx.utils.sheet_to_csv(worksheet);
+                excelTextParts.push({ text: "Here is the parsed spreadsheet content in CSV format for file " + fileName + ":\n" + csvData });
+            } else if (mimeType.includes("wordprocessingml") || mimeType.includes("msword") || fileName.endsWith(".docx") || fileName.endsWith(".doc")) {
+                console.log("Detected Word document! Parsing with mammoth before sending to Gemini...");
+                try {
+                    const mammoth = require("mammoth");
+                    const docxResult = await mammoth.extractRawText({ buffer });
+                    excelTextParts.push({ text: "Here is the parsed Word document content for file " + fileName + ":\n" + docxResult.value });
+                } catch (e) {
+                    console.error("Mammoth failed to load or parse:", e);
+                    excelTextParts.push({ text: "Failed to parse word document: " + fileName });
                 }
-            };
+            } else {
+                let actualMime = mimeType;
+                if (!actualMime || actualMime === "application/octet-stream") {
+                    if (fileName.endsWith(".pdf")) actualMime = "application/pdf";
+                    else if (fileName.endsWith(".png")) actualMime = "image/png";
+                    else if (fileName.endsWith(".webp")) actualMime = "image/webp";
+                    else actualMime = "image/jpeg";
+                }
+                mimeType = actualMime; // update for later
+                inlineDataParts.push({
+                    inlineData: {
+                        mimeType: actualMime,
+                        data: base64Data
+                    }
+                });
+            }
         }
 
         console.log(`[Menu AI OCR Engine] Starting Local OCR extraction...`);
         let localRawText = "";
-        if (excelTextPart && excelTextPart.text) {
-             localRawText = excelTextPart.text;
-        } else {
-             localRawText = await extractRawTextLocally(buffer, mimeType);
+        
+        for (const file of files) {
+            let mimeType = file.mimetype;
+            const fileName = file.originalname.toLowerCase();
+            
+            if (mimeType.includes("spreadsheetml") || mimeType.includes("excel") || mimeType.includes("csv") || fileName.endsWith(".xlsx") || fileName.endsWith(".xls") || fileName.endsWith(".csv")) {
+                const workbook = xlsx.read(file.buffer, { type: "buffer" });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                localRawText += "\n" + xlsx.utils.sheet_to_csv(worksheet);
+            } else if (mimeType.includes("wordprocessingml") || mimeType.includes("msword") || fileName.endsWith(".docx") || fileName.endsWith(".doc")) {
+                try {
+                    const mammoth = require("mammoth");
+                    const docxResult = await mammoth.extractRawText({ buffer: file.buffer });
+                    localRawText += "\n" + docxResult.value;
+                } catch(e) {}
+            } else {
+                let actualMime = mimeType;
+                if (!actualMime || actualMime === "application/octet-stream") {
+                    if (fileName.endsWith(".pdf")) actualMime = "application/pdf";
+                    else if (fileName.endsWith(".png")) actualMime = "image/png";
+                    else if (fileName.endsWith(".webp")) actualMime = "image/webp";
+                    else actualMime = "image/jpeg";
+                }
+                const extracted = await extractRawTextLocally(file.buffer, actualMime);
+                localRawText += "\n" + extracted;
+            }
         }
         
-        if (localRawText) {
+        if (localRawText.trim()) {
              const localParseResult = parseMenuLocal(localRawText);
              console.log(`[Menu AI OCR Engine] Local Parser Confidence: ${localParseResult.confidence}%`, localParseResult.metrics);
              
@@ -243,8 +270,8 @@ ${languageRule}
 
         if (parseOnly) {
             const partsArray = [{ text: prompt }];
-            if (excelTextPart) partsArray.push(excelTextPart);
-            if (inlineDataPart) partsArray.push(inlineDataPart);
+            partsArray.push(...excelTextParts);
+            partsArray.push(...inlineDataParts);
             
             console.log(`[Menu AI OCR Engine] Fast parsing complete. Returning payload to frontend for client-side processing.`);
             return res.json({
@@ -270,8 +297,8 @@ ${languageRule}
                         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${currentKey}`;
 
                         const partsArray = [{ text: prompt }];
-                        if (excelTextPart) partsArray.push(excelTextPart);
-                        if (inlineDataPart) partsArray.push(inlineDataPart);
+                        partsArray.push(...excelTextParts);
+                        partsArray.push(...inlineDataParts);
 
                         const response = await axios.post(geminiUrl, {
                             contents: [{ parts: partsArray }],
@@ -568,18 +595,26 @@ app.get('/api/proxy/google-image-search', async (req, res) => {
 
 app.post('/api/merchant/onboard', async (req, res) => {
     try {
-        const { email, password, restaurantName, menu } = req.body;
+        const { email, phone, password, restaurantName, menu, address, timings, contactPhone } = req.body;
         
         if (!email || !password || !restaurantName || !menu || !Array.isArray(menu)) {
             return res.status(400).json({ success: false, error: "Malformed payload. Required: email, password, restaurantName, menu[]" });
         }
 
         const normalizedEmail = email.trim().toLowerCase();
+        const normalizedPhone = phone ? phone.trim().toLowerCase() : undefined;
 
         // Safeguard 3: Prevent Duplicate Deploy
-        const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+        const existingUser = await prisma.user.findFirst({ 
+            where: { 
+                OR: [
+                    { email: normalizedEmail },
+                    ...(normalizedPhone ? [{ phone: normalizedPhone }] : [])
+                ]
+            } 
+        });
         if (existingUser) {
-            return res.status(409).json({ success: false, error: "Merchant with this email already exists." });
+            return res.status(409).json({ success: false, error: "Merchant with this email or phone already exists." });
         }
 
         const clerkId = require('crypto').randomUUID(); // Simulated Clerk ID
@@ -592,6 +627,7 @@ app.post('/api/merchant/onboard', async (req, res) => {
             const user = await tx.user.create({
                 data: {
                     email: normalizedEmail,
+                    phone: normalizedPhone,
                     password: hashedPassword,
                     name: restaurantName,
                     clerkId,

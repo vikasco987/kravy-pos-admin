@@ -590,7 +590,7 @@ export default function UserDetailPage() {
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-[#0f0f12] flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0f0f12] flex items-center justify-center">
        <Loader2 className="text-indigo-500 animate-spin" size={32} />
     </div>
   );
@@ -618,35 +618,35 @@ export default function UserDetailPage() {
   const maxHourValue = Math.max(...activeHours, 1);
 
   return (
-    <div className="min-h-screen bg-[#0f0f12] text-slate-200 font-sans selection:bg-indigo-500/30">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0f0f12] text-gray-900 dark:text-slate-200 font-sans selection:bg-indigo-500/30">
       {/* HEADER BAR */}
-      <header className="border-b border-white/5 bg-[#0f0f12]/60 backdrop-blur-xl sticky top-0 z-50">
+      <header className="border-b border-gray-200 dark:border-white/5 bg-gray-50 dark:bg-[#0f0f12]/60 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => navigate("/dashboard/staff")}
-              className="p-1.5 hover:bg-white/5 rounded-lg transition-all text-slate-500 hover:text-white"
+              className="p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all text-gray-600 dark:text-slate-500 hover:text-black dark:hover:text-white"
             >
               <ArrowLeft size={18} />
             </button>
             <div className="flex items-center gap-3">
-               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-indigo-500/20">
+               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-gray-900 dark:text-white font-black text-sm shadow-lg shadow-indigo-500/20">
                   {user.name?.[0] || 'U'}
                </div>
                <div>
-                  <h1 className="text-sm font-bold text-white leading-none">{user.name || "Unnamed User"}</h1>
-                  <p className="text-[9px] text-slate-500 font-bold mt-0.5 tracking-tight">ID: {user.id}</p>
+                  <h1 className="text-sm font-bold text-gray-900 dark:text-white leading-none">{user.name || "Unnamed User"}</h1>
+                  <p className="text-[9px] text-gray-600 dark:text-slate-500 font-bold mt-0.5 tracking-tight">ID: {user.id}</p>
                </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
              <button 
                 onClick={() => setShowJson(true)}
-                className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-2 text-slate-300"
+                className="px-3 py-1.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-gray-200 dark:border-white/5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-2 text-gray-800 dark:text-slate-300"
              >
                 <Code size={12} /> Show JSON
              </button>
-             <button className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-[10px] font-bold transition-all flex items-center gap-2 text-white shadow-lg shadow-indigo-500/20">
+             <button className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-[10px] font-bold transition-all flex items-center gap-2 text-gray-900 dark:text-white shadow-lg shadow-indigo-500/20">
                 Actions <ChevronRight size={12} />
              </button>
           </div>
@@ -655,12 +655,12 @@ export default function UserDetailPage() {
 
       <main className="max-w-7xl mx-auto px-6 py-6">
         {/* TABS */}
-        <nav className="flex items-center gap-6 border-b border-white/5 mb-6 overflow-x-auto scrollbar-none">
+        <nav className="flex items-center gap-6 border-b border-gray-200 dark:border-white/5 mb-6 overflow-x-auto scrollbar-none">
            {["Profile", "Organizations", "Devices", "Settings"].map(tab => (
              <button 
                key={tab}
                onClick={() => setActiveTab(tab)}
-               className={`py-3 text-[11px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeTab === tab ? 'text-white' : 'text-slate-500 hover:text-slate-300'}`}
+               className={`py-3 text-[11px] font-black uppercase tracking-widest relative transition-all whitespace-nowrap ${activeTab === tab ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-slate-500 hover:text-gray-800 dark:text-slate-300'}`}
              >
                {tab}
                {activeTab === tab && (
@@ -677,14 +677,14 @@ export default function UserDetailPage() {
             {activeTab === "Profile" && (
               <>
                 {/* ACTIVITY SECTION */}
-                <section className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-2xl">
+                <section className="bg-black/[0.02] dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-2xl">
                <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                    <h2 className="text-[10px] font-black uppercase tracking-widest text-gray-700 dark:text-slate-400 flex items-center gap-2">
                        <Activity size={14} className="text-indigo-500" /> User Activity
                     </h2>
                     {lastLoginDate && (
-                      <p className="text-[9px] font-bold text-slate-500 mt-1.5 flex items-center gap-1.5">
+                      <p className="text-[9px] font-bold text-gray-600 dark:text-slate-500 mt-1.5 flex items-center gap-1.5">
                         <History size={10} /> Last Login: {lastLoginDate.toLocaleString()}
                       </p>
                     )}
@@ -701,19 +701,19 @@ export default function UserDetailPage() {
                     return (
                       <div key={hour} className="flex-1 flex flex-col justify-end items-center group relative">
                         {val > 0 && (
-                          <div className="absolute -top-6 bg-white text-black text-[8px] font-black px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute -top-6 bg-white dark:bg-[#1A1A2E] text-black text-[8px] font-black px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
                             {val}
                           </div>
                         )}
                         <div 
-                          className={`w-full rounded-t-sm transition-all duration-500 ${val > 0 ? 'bg-indigo-500 group-hover:bg-indigo-400 cursor-pointer shadow-[0_0_8px_rgba(99,102,241,0.3)]' : 'bg-white/[0.03]'}`}
+                          className={`w-full rounded-t-sm transition-all duration-500 ${val > 0 ? 'bg-indigo-500 group-hover:bg-indigo-400 cursor-pointer shadow-[0_0_8px_rgba(99,102,241,0.3)]' : 'bg-white dark:bg-[#1A1A2E]/[0.03]'}`}
                           style={{ height: val > 0 ? `${Math.max(10, heightPercent)}%` : '10%' }}
                         />
                       </div>
                     );
                   })}
                </div>
-               <div className="flex justify-between mt-3 text-[8px] font-black text-slate-500 uppercase tracking-widest border-t border-white/5 pt-2">
+               <div className="flex justify-between mt-3 text-[8px] font-black text-gray-600 dark:text-slate-500 uppercase tracking-widest border-t border-gray-200 dark:border-white/5 pt-2">
                  <span>12 AM</span>
                  <span>6 AM</span>
                  <span>12 PM</span>
@@ -723,47 +723,47 @@ export default function UserDetailPage() {
             </section>
 
             {/* PERSONAL INFO SECTION */}
-            <section className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
-               <div className="px-6 py-4 border-b border-white/5 bg-white/[0.01]">
-                  <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Personal Information</h2>
+            <section className="bg-black/[0.02] dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+               <div className="px-6 py-4 border-b border-gray-200 dark:border-white/5 bg-black/[0.01] dark:bg-white/[0.01]">
+                  <h2 className="text-[10px] font-black uppercase tracking-widest text-gray-700 dark:text-slate-400">Personal Information</h2>
                </div>
                <div className="p-6 space-y-6">
                   <div className="flex items-center gap-4">
-                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/20">
+                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-gray-900 dark:text-white font-black text-xl shadow-lg shadow-indigo-600/20">
                         {user.name?.[0] || 'U'}
                      </div>
-                     <button className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold transition-all text-slate-400 hover:text-white">
+                     <button className="flex items-center gap-2 px-3 py-1.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-gray-300 dark:border-white/10 rounded-lg text-[10px] font-bold transition-all text-gray-700 dark:text-slate-400 hover:text-black dark:hover:text-white">
                         <Upload size={12} /> Update Avatar
                      </button>
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-6">
                      <div className="space-y-1.5">
-                        <label className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Full Name</label>
+                        <label className="text-[9px] font-black uppercase tracking-[0.15em] text-gray-600 dark:text-slate-500 ml-1">Full Name</label>
                         <input 
                           type="text"
                           disabled={!isEditing}
                           value={editData.name}
                           onChange={(e) => setEditData({...editData, name: e.target.value})}
-                          className="w-full bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-indigo-500/50 transition-all disabled:opacity-50"
+                          className="w-full bg-white dark:bg-[#1A1A2E]/[0.03] border border-gray-200 dark:border-white/5 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-indigo-500/50 transition-all disabled:opacity-50"
                         />
                      </div>
                      <div className="space-y-1.5">
-                        <label className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-500 ml-1">Contact Phone</label>
+                        <label className="text-[9px] font-black uppercase tracking-[0.15em] text-gray-600 dark:text-slate-500 ml-1">Contact Phone</label>
                         <input 
                           type="tel"
                           disabled={!isEditing}
                           value={editData.phone}
                           onChange={(e) => setEditData({...editData, phone: e.target.value})}
-                          className="w-full bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-indigo-500/50 transition-all disabled:opacity-50"
+                          className="w-full bg-white dark:bg-[#1A1A2E]/[0.03] border border-gray-200 dark:border-white/5 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-indigo-500/50 transition-all disabled:opacity-50"
                         />
                      </div>
                    </div>
 
                     {/* ROLE MANAGEMENT */}
-                    <div className="pt-6 border-t border-white/5 space-y-4">
+                    <div className="pt-6 border-t border-gray-200 dark:border-white/5 space-y-4">
                        <div className="flex items-center justify-between">
-                          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500">System Role</h3>
+                          <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-slate-500">System Role</h3>
                           {user.isStaffModel && <span className="text-[8px] font-black px-1.5 py-0.5 bg-orange-500/10 text-orange-400 rounded-md border border-orange-500/20 uppercase">Staff Account</span>}
                        </div>
                        <div className="flex flex-wrap gap-2">
@@ -774,8 +774,8 @@ export default function UserDetailPage() {
                               disabled={saving}
                               className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${
                                 (user.role || user.accessType) === role 
-                                ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-600/20' 
-                                : 'bg-white/5 border-white/5 text-slate-500 hover:text-slate-300 hover:bg-white/10'
+                                ? 'bg-indigo-600 border-indigo-500 text-gray-900 dark:text-white shadow-lg shadow-indigo-600/20' 
+                                : 'bg-black/5 dark:bg-white/5 border-gray-200 dark:border-white/5 text-gray-600 dark:text-slate-500 hover:text-gray-800 dark:text-slate-300 hover:bg-black/10 dark:hover:bg-white/10'
                               }`}
                             >
                                {role}
@@ -783,10 +783,10 @@ export default function UserDetailPage() {
                           ))}
                        </div>
                        
-                       <div className="mt-4 p-4 bg-white/[0.02] border border-white/5 rounded-xl flex items-center justify-between">
+                       <div className="mt-4 p-4 bg-black/[0.02] dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-xl flex items-center justify-between">
                           <div>
-                            <p className="text-[11px] font-bold text-slate-300">Role Permissions</p>
-                            <p className="text-[9px] text-slate-500 font-bold mt-1 max-w-sm">
+                            <p className="text-[11px] font-bold text-gray-800 dark:text-slate-300">Role Permissions</p>
+                            <p className="text-[9px] text-gray-600 dark:text-slate-500 font-bold mt-1 max-w-sm">
                               {hasOverrides 
                                 ? "This user has custom permission overrides applied." 
                                 : `This user's access is currently managed by their default ${user.role || user.accessType} role.`}
@@ -797,7 +797,7 @@ export default function UserDetailPage() {
                             className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border ${
                               hasOverrides 
                               ? "bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20" 
-                              : "bg-white/5 text-slate-300 border-white/10 hover:bg-white/10"
+                              : "bg-black/5 dark:bg-white/5 text-gray-800 dark:text-slate-300 border-gray-300 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10"
                             }`}
                           >
                             {hasOverrides ? "Edit Overrides" : "Customize"}
@@ -809,7 +809,7 @@ export default function UserDetailPage() {
                      {!isEditing ? (
                        <button 
                          onClick={() => setIsEditing(true)}
-                         className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 transition-all"
+                         className="px-5 py-2.5 bg-indigo-600 text-gray-900 dark:text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 transition-all"
                        >
                          Edit Profile
                        </button>
@@ -820,14 +820,14 @@ export default function UserDetailPage() {
                              setIsEditing(false);
                              setEditData({ name: user.name, phone: user.phone || "", password: "" });
                            }}
-                           className="px-5 py-2.5 bg-white/5 text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                           className="px-5 py-2.5 bg-black/5 dark:bg-white/5 text-gray-700 dark:text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black/10 dark:hover:bg-white/10 transition-all"
                          >
                            Cancel
                          </button>
                          <button 
                            onClick={handleUpdate}
                            disabled={saving}
-                           className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 transition-all flex items-center gap-2"
+                           className="px-5 py-2.5 bg-emerald-600 text-gray-900 dark:text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 transition-all flex items-center gap-2"
                          >
                            {saving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
                            Save
@@ -838,11 +838,11 @@ export default function UserDetailPage() {
                </div>
 
                {/* SECONDARY IDENTIFIERS (Clerk Style) */}
-               <div className="p-6 border-t border-white/5 bg-black/20 space-y-8">
+               <div className="p-6 border-t border-gray-200 dark:border-white/5 bg-black/20 space-y-8">
                   {/* EMAILS */}
                   <div className="space-y-4">
                      <div className="flex items-center justify-between">
-                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Email Addresses</h3>
+                        <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-slate-500">Email Addresses</h3>
                         <button 
                           onClick={() => setShowAddEmail(true)}
                           className="flex items-center gap-1.5 text-indigo-400 hover:text-indigo-300 text-[10px] font-bold transition-all"
@@ -852,15 +852,15 @@ export default function UserDetailPage() {
                      </div>
                      <div className="space-y-2">
                         {/* Primary */}
-                        <div className="flex items-center justify-between p-3 bg-white/[0.03] border border-white/5 rounded-xl group">
+                        <div className="flex items-center justify-between p-3 bg-white dark:bg-[#1A1A2E]/[0.03] border border-gray-200 dark:border-white/5 rounded-xl group">
                            <div className="flex items-center gap-3">
-                              <Mail size={14} className="text-slate-500" />
-                              <span className="text-xs font-bold text-white">{user.email}</span>
+                              <Mail size={14} className="text-gray-600 dark:text-slate-500" />
+                              <span className="text-xs font-bold text-gray-900 dark:text-white">{user.email}</span>
                               <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 text-[8px] font-black uppercase tracking-widest rounded-md border border-emerald-500/20">Primary</span>
                            </div>
                            <button 
                              onClick={() => handleCopy(user.email, 'Email address')}
-                             className="p-1.5 text-slate-600 hover:text-indigo-400 hover:bg-indigo-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                             className="p-1.5 text-gray-500 dark:text-slate-600 hover:text-indigo-400 hover:bg-indigo-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                              title="Copy email"
                            >
                              <Copy size={12} />
@@ -868,22 +868,22 @@ export default function UserDetailPage() {
                         </div>
                         {/* Secondaries */}
                         {user.secondaryEmails?.map(email => (
-                           <div key={email} className="flex items-center justify-between p-3 bg-white/[0.01] border border-white/5 rounded-xl group hover:bg-white/[0.02] transition-all">
+                           <div key={email} className="flex items-center justify-between p-3 bg-black/[0.01] dark:bg-white/[0.01] border border-gray-200 dark:border-white/5 rounded-xl group hover:bg-black/[0.02] dark:bg-white/[0.02] transition-all">
                               <div className="flex items-center gap-3">
-                                 <Mail size={14} className="text-slate-500" />
-                                 <span className="text-xs font-bold text-slate-300">{email}</span>
+                                 <Mail size={14} className="text-gray-600 dark:text-slate-500" />
+                                 <span className="text-xs font-bold text-gray-800 dark:text-slate-300">{email}</span>
                               </div>
                               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                                 <button 
                                   onClick={() => handleCopy(email, 'Email address')}
-                                  className="p-1.5 text-slate-600 hover:text-indigo-400 hover:bg-indigo-400/10 rounded-lg transition-all"
+                                  className="p-1.5 text-gray-500 dark:text-slate-600 hover:text-indigo-400 hover:bg-indigo-400/10 rounded-lg transition-all"
                                   title="Copy email"
                                 >
                                   <Copy size={12} />
                                 </button>
                                 <button 
                                   onClick={() => handleRemoveIdentifier('email', email)}
-                                  className="p-1.5 text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all"
+                                  className="p-1.5 text-gray-500 dark:text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all"
                                   title="Remove email"
                                 >
                                    <Trash2 size={12} />
@@ -897,7 +897,7 @@ export default function UserDetailPage() {
                   {/* PHONES */}
                   <div className="space-y-4">
                      <div className="flex items-center justify-between">
-                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Phone Numbers</h3>
+                        <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-slate-500">Phone Numbers</h3>
                         <button 
                           onClick={() => setShowAddPhone(true)}
                           className="flex items-center gap-1.5 text-indigo-400 hover:text-indigo-300 text-[10px] font-bold transition-all"
@@ -908,15 +908,15 @@ export default function UserDetailPage() {
                      <div className="space-y-2">
                         {/* Primary */}
                         {user.phone && (
-                           <div className="flex items-center justify-between p-3 bg-white/[0.03] border border-white/5 rounded-xl group">
+                           <div className="flex items-center justify-between p-3 bg-white dark:bg-[#1A1A2E]/[0.03] border border-gray-200 dark:border-white/5 rounded-xl group">
                               <div className="flex items-center gap-3">
-                                 <Phone size={14} className="text-slate-500" />
-                                 <span className="text-xs font-bold text-white">{user.phone}</span>
+                                 <Phone size={14} className="text-gray-600 dark:text-slate-500" />
+                                 <span className="text-xs font-bold text-gray-900 dark:text-white">{user.phone}</span>
                                  <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 text-[8px] font-black uppercase tracking-widest rounded-md border border-emerald-500/20">Primary</span>
                               </div>
                               <button 
                                 onClick={() => handleCopy(user.phone!, 'Phone number')}
-                                className="p-1.5 text-slate-600 hover:text-indigo-400 hover:bg-indigo-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                className="p-1.5 text-gray-500 dark:text-slate-600 hover:text-indigo-400 hover:bg-indigo-400/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                                 title="Copy phone"
                               >
                                 <Copy size={12} />
@@ -925,22 +925,22 @@ export default function UserDetailPage() {
                         )}
                         {/* Secondaries */}
                         {user.secondaryPhones?.map(phone => (
-                           <div key={phone} className="flex items-center justify-between p-3 bg-white/[0.01] border border-white/5 rounded-xl group hover:bg-white/[0.02] transition-all">
+                           <div key={phone} className="flex items-center justify-between p-3 bg-black/[0.01] dark:bg-white/[0.01] border border-gray-200 dark:border-white/5 rounded-xl group hover:bg-black/[0.02] dark:bg-white/[0.02] transition-all">
                               <div className="flex items-center gap-3">
-                                 <Phone size={14} className="text-slate-500" />
-                                 <span className="text-xs font-bold text-slate-300">{phone}</span>
+                                 <Phone size={14} className="text-gray-600 dark:text-slate-500" />
+                                 <span className="text-xs font-bold text-gray-800 dark:text-slate-300">{phone}</span>
                               </div>
                               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                                 <button 
                                   onClick={() => handleCopy(phone, 'Phone number')}
-                                  className="p-1.5 text-slate-600 hover:text-indigo-400 hover:bg-indigo-400/10 rounded-lg transition-all"
+                                  className="p-1.5 text-gray-500 dark:text-slate-600 hover:text-indigo-400 hover:bg-indigo-400/10 rounded-lg transition-all"
                                   title="Copy phone"
                                 >
                                   <Copy size={12} />
                                 </button>
                                 <button 
                                   onClick={() => handleRemoveIdentifier('phone', phone)}
-                                  className="p-1.5 text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all"
+                                  className="p-1.5 text-gray-500 dark:text-slate-600 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all"
                                   title="Remove phone"
                                 >
                                    <Trash2 size={12} />
@@ -954,9 +954,9 @@ export default function UserDetailPage() {
             </section>
 
             {/* SECURITY SECTION */}
-            <section className="bg-[#16161a] border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
-               <div className="p-8 border-b border-white/5 bg-white/[0.02]">
-                  <h2 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+            <section className="bg-white dark:bg-[#16161a] border border-gray-200 dark:border-white/5 rounded-3xl overflow-hidden shadow-2xl">
+               <div className="p-8 border-b border-gray-200 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.02]">
+                  <h2 className="text-sm font-black uppercase tracking-widest text-gray-700 dark:text-slate-400 flex items-center gap-2">
                      <Key size={16} /> Password & Security
                   </h2>
                </div>
@@ -967,13 +967,13 @@ export default function UserDetailPage() {
                      </div>
                      <div>
                         <h3 className="text-sm font-bold text-amber-500">Security Notice</h3>
-                        <p className="text-xs text-slate-500 mt-1">Changing a user's password will immediately invalidate all their active sessions and they will need to login again.</p>
+                        <p className="text-xs text-gray-600 dark:text-slate-500 mt-1">Changing a user's password will immediately invalidate all their active sessions and they will need to login again.</p>
                      </div>
                   </div>
 
                   <div className="space-y-4">
                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">New Password</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-slate-500 ml-1">New Password</label>
                         <div className="flex gap-3">
                            <div className="relative flex-1">
                               <input 
@@ -981,12 +981,12 @@ export default function UserDetailPage() {
                                 placeholder="Set a new secure password"
                                 value={editData.password}
                                 onChange={(e) => setEditData({...editData, password: e.target.value})}
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold outline-none focus:border-indigo-500 transition-all pr-12"
+                                className="w-full bg-black/5 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-2xl px-5 py-4 text-sm font-bold outline-none focus:border-indigo-500 transition-all pr-12"
                               />
                               <button 
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 dark:text-slate-500 hover:text-black dark:hover:text-white transition-colors"
                               >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                               </button>
@@ -997,7 +997,7 @@ export default function UserDetailPage() {
                                setEditData({...editData, password: newPass});
                                setShowPassword(true); // Show it automatically when generated
                              }}
-                             className="px-5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all text-xs font-bold"
+                             className="px-5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-gray-300 dark:border-white/10 rounded-2xl transition-all text-xs font-bold"
                            >
                              Generate
                            </button>
@@ -1006,7 +1006,7 @@ export default function UserDetailPage() {
                      <button 
                        onClick={handleUpdate}
                        disabled={!editData.password || saving}
-                       className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl text-xs font-black uppercase tracking-widest transition-all disabled:opacity-20"
+                       className="w-full py-4 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-gray-300 dark:border-white/10 rounded-2xl text-xs font-black uppercase tracking-widest transition-all disabled:opacity-20"
                      >
                        Update Password
                      </button>
@@ -1019,9 +1019,9 @@ export default function UserDetailPage() {
             {/* DEVICES / SESSIONS TAB */}
             {activeTab === "Devices" && (
                 <section className="space-y-6">
-                    <div className="bg-[#16161a] border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
-                        <div className="p-8 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
-                            <h2 className="text-sm font-black uppercase tracking-widest text-slate-400">Active Sessions</h2>
+                    <div className="bg-white dark:bg-[#16161a] border border-gray-200 dark:border-white/5 rounded-3xl overflow-hidden shadow-2xl">
+                        <div className="p-8 border-b border-gray-200 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.02] flex items-center justify-between">
+                            <h2 className="text-sm font-black uppercase tracking-widest text-gray-700 dark:text-slate-400">Active Sessions</h2>
                             <span className="px-3 py-1 bg-indigo-500/10 text-indigo-400 text-[10px] font-bold rounded-full border border-indigo-500/10">
                                 {user.sessions?.length || 0} Connected
                             </span>
@@ -1029,40 +1029,40 @@ export default function UserDetailPage() {
                         <div className="divide-y divide-white/5">
                             {user.sessions && user.sessions.length > 0 ? (
                                 user.sessions.map((session: any) => (
-                                    <div key={session.id} className="p-8 flex items-start gap-6 hover:bg-white/[0.01] transition-all">
+                                    <div key={session.id} className="p-8 flex items-start gap-6 hover:bg-black/[0.01] dark:bg-white/[0.01] transition-all">
                                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${session.deviceType === 'mobile' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
                                             {session.deviceType === 'mobile' ? <Smartphone size={24} /> : <Monitor size={24} />}
                                         </div>
                                         <div className="flex-1">
                                             <div className="flex items-center gap-3 mb-1">
-                                                <h3 className="text-sm font-bold text-white">
+                                                <h3 className="text-sm font-bold text-gray-900 dark:text-white">
                                                     {session.browserName} on {session.osName} {session.osVersion}
                                                 </h3>
                                                 {session.status === 'active' && (
                                                     <span className="px-2 py-0.5 bg-emerald-500 text-[8px] font-black uppercase tracking-widest rounded-md">Active</span>
                                                 )}
                                             </div>
-                                            <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-[11px] text-slate-500 font-bold">
+                                            <div className="flex flex-wrap items-center gap-y-2 gap-x-6 text-[11px] text-gray-600 dark:text-slate-500 font-bold">
                                                 <div className="flex items-center gap-1.5">
-                                                    <Globe size={12} className="text-slate-600" /> {session.ipAddress}
+                                                    <Globe size={12} className="text-gray-500 dark:text-slate-600" /> {session.ipAddress}
                                                 </div>
                                                 <div className="flex items-center gap-1.5">
-                                                    <Calendar size={12} className="text-slate-600" /> Last active {new Date(session.lastActiveAt).toLocaleString()}
+                                                    <Calendar size={12} className="text-gray-500 dark:text-slate-600" /> Last active {new Date(session.lastActiveAt).toLocaleString()}
                                                 </div>
                                             </div>
                                         </div>
-                                        <button className="px-4 py-2 bg-white/5 hover:bg-rose-500/20 hover:text-rose-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                                        <button className="px-4 py-2 bg-black/5 dark:bg-white/5 hover:bg-rose-500/20 hover:text-rose-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
                                             Revoke
                                         </button>
                                     </div>
                                 ))
                             ) : (
                                 <div className="p-20 text-center">
-                                    <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-600">
+                                    <div className="w-16 h-16 bg-black/5 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-500 dark:text-slate-600">
                                         <Monitor size={32} />
                                     </div>
-                                    <h3 className="text-slate-400 font-bold">No active sessions found</h3>
-                                    <p className="text-slate-600 text-xs mt-1">This user is not currently logged in on any device.</p>
+                                    <h3 className="text-gray-700 dark:text-slate-400 font-bold">No active sessions found</h3>
+                                    <p className="text-gray-500 dark:text-slate-600 text-xs mt-1">This user is not currently logged in on any device.</p>
                                 </div>
                             )}
                         </div>
@@ -1072,14 +1072,14 @@ export default function UserDetailPage() {
 
             {/* PLACEHOLDERS FOR OTHER TABS */}
             {activeTab === "Organizations" && (
-                <div className="bg-[#16161a] border border-white/5 rounded-3xl p-20 text-center shadow-2xl">
-                    <p className="text-slate-500 font-bold">No linked organizations found for this user.</p>
+                <div className="bg-white dark:bg-[#16161a] border border-gray-200 dark:border-white/5 rounded-3xl p-20 text-center shadow-2xl">
+                    <p className="text-gray-600 dark:text-slate-500 font-bold">No linked organizations found for this user.</p>
                 </div>
             )}
 
             {activeTab === "Settings" && (
-                <div className="bg-[#16161a] border border-white/5 rounded-3xl p-20 text-center shadow-2xl">
-                    <p className="text-slate-500 font-bold">Additional user settings will appear here.</p>
+                <div className="bg-white dark:bg-[#16161a] border border-gray-200 dark:border-white/5 rounded-3xl p-20 text-center shadow-2xl">
+                    <p className="text-gray-600 dark:text-slate-500 font-bold">Additional user settings will appear here.</p>
                 </div>
             )}
 
@@ -1089,17 +1089,17 @@ export default function UserDetailPage() {
            <div className="lg:col-span-4">
              <div className="sticky top-20 space-y-5">
             
-            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-2xl space-y-6">
+            <div className="bg-black/[0.02] dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-2xl space-y-6">
                <div className="space-y-1">
-                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">User ID</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-600 dark:text-slate-500">User ID</p>
                   <div className="flex items-center justify-between group">
-                     <p className="text-[10px] font-mono font-bold text-slate-300 truncate max-w-[150px]">{user.id}</p>
+                     <p className="text-[10px] font-mono font-bold text-gray-800 dark:text-slate-300 truncate max-w-[150px]">{user.id}</p>
                      <button 
                        onClick={() => {
                          navigator.clipboard.writeText(user.id);
                          alert("ID Copied");
                        }}
-                       className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-white/5 rounded-lg transition-all text-slate-500"
+                       className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all text-gray-600 dark:text-slate-500"
                      >
                         <Copy size={10} />
                      </button>
@@ -1107,15 +1107,15 @@ export default function UserDetailPage() {
                </div>
 
                <div className="space-y-1">
-                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Primary email</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-600 dark:text-slate-500">Primary email</p>
                   <div className="flex items-center justify-between group">
-                     <p className="text-[10px] font-bold text-white truncate max-w-[150px]">{user.email}</p>
+                     <p className="text-[10px] font-bold text-gray-900 dark:text-white truncate max-w-[150px]">{user.email}</p>
                      <button 
                        onClick={() => {
                          navigator.clipboard.writeText(user.email);
                          alert("Email Copied");
                        }}
-                       className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-white/5 rounded-lg transition-all text-slate-500"
+                       className="p-1.5 opacity-0 group-hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-all text-gray-600 dark:text-slate-500"
                      >
                         <Copy size={10} />
                      </button>
@@ -1124,41 +1124,41 @@ export default function UserDetailPage() {
 
                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Joined</p>
-                     <p className="text-[10px] font-bold text-white">{new Date(user.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
+                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-600 dark:text-slate-500">Joined</p>
+                     <p className="text-[10px] font-bold text-gray-900 dark:text-white">{new Date(user.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
                   </div>
                   <div className="space-y-1">
-                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">Updated</p>
-                     <p className="text-[10px] font-bold text-slate-400">{Math.floor((new Date().getTime() - new Date(user.updatedAt || user.createdAt).getTime()) / (1000 * 60 * 60 * 24))}d ago</p>
+                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-600 dark:text-slate-500">Updated</p>
+                     <p className="text-[10px] font-bold text-gray-700 dark:text-slate-400">{Math.floor((new Date().getTime() - new Date(user.updatedAt || user.createdAt).getTime()) / (1000 * 60 * 60 * 24))}d ago</p>
                   </div>
                </div>
 
-               <div className="pt-4 border-t border-white/5 space-y-3">
+               <div className="pt-4 border-t border-gray-200 dark:border-white/5 space-y-3">
                   <div className="flex items-center justify-between">
-                     <span className="text-[9px] font-black uppercase text-slate-500">Auth</span>
+                     <span className="text-[9px] font-black uppercase text-gray-600 dark:text-slate-500">Auth</span>
                      <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase ${user.isStaffModel ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'}`}>
                         {user.isStaffModel ? 'Custom' : 'Clerk'}
                      </span>
                   </div>
                   <div className="flex items-center justify-between">
-                     <span className="text-[9px] font-black uppercase text-slate-500">Role</span>
-                     <span className="text-[9px] font-black text-white">{user.role || user.accessType || "Standard User"}</span>
+                     <span className="text-[9px] font-black uppercase text-gray-600 dark:text-slate-500">Role</span>
+                     <span className="text-[9px] font-black text-gray-900 dark:text-white">{user.role || user.accessType || "Standard User"}</span>
                   </div>
                   {user.business && (
                     <div className="flex items-center justify-between">
-                       <span className="text-[9px] font-black uppercase text-slate-500">Business</span>
+                       <span className="text-[9px] font-black uppercase text-gray-600 dark:text-slate-500">Business</span>
                        <span className="text-[9px] font-black text-indigo-400 truncate ml-4 text-right">{user.business.businessName}</span>
                     </div>
                   )}
                </div>
             </div>
 
-            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-6 shadow-2xl space-y-3">
-               <h3 className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2">Quick Actions</h3>
+            <div className="bg-black/[0.02] dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-2xl p-6 shadow-2xl space-y-3">
+               <h3 className="text-[9px] font-black uppercase tracking-widest text-gray-600 dark:text-slate-500 mb-2">Quick Actions</h3>
                <button 
                  onClick={handleImpersonate}
                  disabled={impersonating}
-                 className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                 className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-gray-900 dark:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                >
                   {impersonating ? <Loader2 size={12} className="animate-spin" /> : <Shield size={12} />}
                   Login as User
@@ -1178,7 +1178,7 @@ export default function UserDetailPage() {
                   <button 
                     onClick={handleRevokeAllSessions}
                     disabled={saving}
-                    className="py-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all text-slate-400 border border-white/5 disabled:opacity-50"
+                    className="py-2.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all text-gray-700 dark:text-slate-400 border border-gray-200 dark:border-white/5 disabled:opacity-50"
                   >
                     Logout Everywhere
                   </button>
@@ -1203,16 +1203,16 @@ export default function UserDetailPage() {
                     initial={{ opacity: 0, scale: 0.95, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                    className="bg-[#0D1117] border border-white/10 w-full max-w-4xl h-[80vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden"
+                    className="bg-gray-100 dark:bg-[#0D1117] border border-gray-300 dark:border-white/10 w-full max-w-4xl h-[80vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden"
                 >
-                    <div className="px-8 py-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+                    <div className="px-8 py-6 border-b border-gray-200 dark:border-white/5 flex items-center justify-between bg-black/[0.02] dark:bg-white/[0.02]">
                         <div>
-                            <h3 className="text-white font-black text-lg tracking-tight">Raw User Data</h3>
-                            <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mt-0.5">Admin-only JSON Inspector</p>
+                            <h3 className="text-gray-900 dark:text-white font-black text-lg tracking-tight">Raw User Data</h3>
+                            <p className="text-black/40 dark:text-white/40 text-[10px] font-bold uppercase tracking-widest mt-0.5">Admin-only JSON Inspector</p>
                         </div>
                         <button 
                             onClick={() => setShowJson(false)}
-                            className="w-10 h-10 rounded-full bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center"
+                            className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 transition-all flex items-center justify-center"
                         >
                             <X size={20} />
                         </button>
@@ -1224,13 +1224,13 @@ export default function UserDetailPage() {
                         </pre>
                     </div>
 
-                    <div className="px-8 py-4 bg-white/[0.02] border-t border-white/5 flex justify-end">
+                    <div className="px-8 py-4 bg-black/[0.02] dark:bg-white/[0.02] border-t border-gray-200 dark:border-white/5 flex justify-end">
                         <button 
                             onClick={() => {
                                 navigator.clipboard.writeText(JSON.stringify(user, null, 2));
                                 alert("ID copied to clipboard");
                             }}
-                            className="px-6 py-2 bg-white/10 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-white/20 transition-all"
+                            className="px-6 py-2 bg-black/10 dark:bg-white/10 text-gray-900 dark:text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-white dark:bg-[#1A1A2E]/20 transition-all"
                         >
                             Copy to Clipboard
                         </button>
@@ -1248,34 +1248,34 @@ export default function UserDetailPage() {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-[#16161a] border border-white/10 w-full max-w-md rounded-2xl p-6 shadow-2xl"
+                    className="bg-white dark:bg-[#16161a] border border-gray-300 dark:border-white/10 w-full max-w-md rounded-2xl p-6 shadow-2xl"
                 >
-                    <h3 className="text-sm font-bold text-white mb-1">Add new email address</h3>
-                    <p className="text-[10px] text-slate-500 mb-6">This email can be used as an additional login identifier.</p>
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1">Add new email address</h3>
+                    <p className="text-[10px] text-gray-600 dark:text-slate-500 mb-6">This email can be used as an additional login identifier.</p>
                     
                     <div className="space-y-4">
                         <div className="space-y-1.5">
-                            <label className="text-[9px] font-black uppercase text-slate-500 ml-1">Email Address</label>
+                            <label className="text-[9px] font-black uppercase text-gray-600 dark:text-slate-500 ml-1">Email Address</label>
                             <input 
                                 type="email"
                                 autoFocus
                                 value={newEmail}
                                 onChange={(e) => setNewEmail(e.target.value)}
                                 placeholder="e.g. secondary@kravy.in"
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all"
+                                className="w-full bg-black/5 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all"
                             />
                         </div>
                         <div className="flex gap-3 mt-8">
                             <button 
                                 onClick={() => { setShowAddEmail(false); setNewEmail(""); }}
-                                className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                                className="flex-1 py-2.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-gray-700 dark:text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                             >
                                 Cancel
                             </button>
                             <button 
                                 onClick={() => handleAddIdentifier('email')}
                                 disabled={!newEmail || saving}
-                                className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-20"
+                                className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-gray-900 dark:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-20"
                             >
                                 {saving ? <Loader2 size={12} className="animate-spin mx-auto" /> : "Add Email"}
                             </button>
@@ -1294,34 +1294,34 @@ export default function UserDetailPage() {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-[#16161a] border border-white/10 w-full max-w-md rounded-2xl p-6 shadow-2xl"
+                    className="bg-white dark:bg-[#16161a] border border-gray-300 dark:border-white/10 w-full max-w-md rounded-2xl p-6 shadow-2xl"
                 >
-                    <h3 className="text-sm font-bold text-white mb-1">Add new phone number</h3>
-                    <p className="text-[10px] text-slate-500 mb-6">This number can be used as an additional login identifier.</p>
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1">Add new phone number</h3>
+                    <p className="text-[10px] text-gray-600 dark:text-slate-500 mb-6">This number can be used as an additional login identifier.</p>
                     
                     <div className="space-y-4">
                         <div className="space-y-1.5">
-                            <label className="text-[9px] font-black uppercase text-slate-500 ml-1">Phone Number</label>
+                            <label className="text-[9px] font-black uppercase text-gray-600 dark:text-slate-500 ml-1">Phone Number</label>
                             <input 
                                 type="tel"
                                 autoFocus
                                 value={newPhone}
                                 onChange={(e) => setNewPhone(e.target.value)}
                                 placeholder="e.g. +91 9876543210"
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all"
+                                className="w-full bg-black/5 dark:bg-white/5 border border-gray-300 dark:border-white/10 rounded-xl px-4 py-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all"
                             />
                         </div>
                         <div className="flex gap-3 mt-8">
                             <button 
                                 onClick={() => { setShowAddPhone(false); setNewPhone(""); }}
-                                className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                                className="flex-1 py-2.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-gray-700 dark:text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                             >
                                 Cancel
                             </button>
                             <button 
                                 onClick={() => handleAddIdentifier('phone')}
                                 disabled={!newPhone || saving}
-                                className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-20"
+                                className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-gray-900 dark:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-20"
                             >
                                 {saving ? <Loader2 size={12} className="animate-spin mx-auto" /> : "Add Phone"}
                             </button>
@@ -1340,23 +1340,23 @@ export default function UserDetailPage() {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-[#16161a] border border-white/10 w-full max-w-sm rounded-2xl p-6 shadow-2xl relative overflow-hidden"
+                    className="bg-white dark:bg-[#16161a] border border-gray-300 dark:border-white/10 w-full max-w-sm rounded-2xl p-6 shadow-2xl relative overflow-hidden"
                 >
                     {confirmConfig.isDestructive && (
                       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-rose-500 to-red-600" />
                     )}
-                    <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
                        {confirmConfig.isDestructive && <ShieldAlert size={16} className="text-rose-500" />}
                        {confirmConfig.title}
                     </h3>
-                    <p className="text-[11px] text-slate-400 mb-8 leading-relaxed">
+                    <p className="text-[11px] text-gray-700 dark:text-slate-400 mb-8 leading-relaxed">
                        {confirmConfig.message}
                     </p>
                     
                     <div className="flex gap-3 mt-4">
                         <button 
                             onClick={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
-                            className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                            className="flex-1 py-2.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-gray-800 dark:text-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                         >
                             Cancel
                         </button>
@@ -1364,8 +1364,8 @@ export default function UserDetailPage() {
                             onClick={() => confirmConfig.action()}
                             className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg ${
                               confirmConfig.isDestructive 
-                              ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/20' 
-                              : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20'
+                              ? 'bg-rose-600 hover:bg-rose-500 text-gray-900 dark:text-white shadow-rose-600/20' 
+                              : 'bg-indigo-600 hover:bg-indigo-500 text-gray-900 dark:text-white shadow-indigo-600/20'
                             }`}
                         >
                             {confirmConfig.actionText}
@@ -1384,15 +1384,15 @@ export default function UserDetailPage() {
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-[#121214] border border-white/10 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl"
+              className="bg-white dark:bg-[#121214] border border-gray-300 dark:border-white/10 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl"
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-white/5 bg-white/[0.02]">
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/5 bg-black/[0.02] dark:bg-white/[0.02]">
                 <div>
-                  <h2 className="text-xl font-black text-white">Custom Permissions: {user.name}</h2>
-                  <p className="text-sm text-slate-400 mt-1">Select specific modules this user is allowed to access.</p>
+                  <h2 className="text-xl font-black text-gray-900 dark:text-white">Custom Permissions: {user.name}</h2>
+                  <p className="text-sm text-gray-700 dark:text-slate-400 mt-1">Select specific modules this user is allowed to access.</p>
                 </div>
-                <button onClick={() => setShowPermissionsModal(false)} className="p-2 text-slate-400 hover:text-white transition-colors">
+                <button onClick={() => setShowPermissionsModal(false)} className="p-2 text-gray-700 dark:text-slate-400 hover:text-black dark:hover:text-white transition-colors">
                   <X size={20} />
                 </button>
               </div>
@@ -1409,17 +1409,17 @@ export default function UserDetailPage() {
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
                    {Array.from(new Set(ALL_PATHS.map(p => p.group))).map(group => (
                       <div key={group} className="space-y-3">
-                        <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest border-b border-white/10 pb-2 mb-3">{group}</h4>
+                        <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest border-b border-gray-300 dark:border-white/10 pb-2 mb-3">{group}</h4>
                         {ALL_PATHS.filter(p => p.group === group).map(item => {
                             const isAdmin = (user.role || user.accessType) === "ADMIN";
                             const checked = isAdmin || userPaths.includes(item.path);
                             return (
                                <label 
                                  key={item.path} 
-                                 className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all cursor-pointer ${checked ? "bg-white/5 border-indigo-500/30 text-white" : "bg-transparent border-transparent text-slate-500 hover:bg-white/5"}`}
+                                 className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all cursor-pointer ${checked ? "bg-black/5 dark:bg-white/5 border-indigo-500/30 text-gray-900 dark:text-white" : "bg-transparent border-transparent text-gray-600 dark:text-slate-500 hover:bg-black/5 dark:hover:bg-white/5"}`}
                                >
                                  <div onClick={(e) => { e.preventDefault(); if(!isAdmin) handleTogglePath(item.path); }}>
-                                   {checked ? <CheckSquare size={18} className="text-indigo-500" /> : <Square size={18} className="text-slate-600" />}
+                                   {checked ? <CheckSquare size={18} className="text-indigo-500" /> : <Square size={18} className="text-gray-500 dark:text-slate-600" />}
                                  </div>
                                  <span className="text-sm font-bold flex-1">{item.name}</span>
                                </label>
@@ -1431,25 +1431,25 @@ export default function UserDetailPage() {
               </div>
 
               {/* Footer */}
-              <div className="p-6 border-t border-white/5 bg-white/[0.01] flex items-center justify-between">
+              <div className="p-6 border-t border-gray-200 dark:border-white/5 bg-black/[0.01] dark:bg-white/[0.01] flex items-center justify-between">
                  <button 
                    onClick={revertToRoleDefaults}
                    disabled={!hasOverrides || saving || (user.role || user.accessType) === "ADMIN"}
-                   className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors disabled:opacity-50"
+                   className="text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-slate-500 hover:text-black dark:hover:text-white transition-colors disabled:opacity-50"
                  >
                    Revert to Default
                  </button>
                  <div className="flex items-center gap-3">
                    <button 
                      onClick={() => setShowPermissionsModal(false)}
-                     className="px-5 py-2.5 bg-white/5 hover:bg-white/10 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                     className="px-5 py-2.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-gray-900 dark:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
                    >
                      Cancel
                    </button>
                    <button 
                      onClick={saveCustomPermissions}
                      disabled={saving || (user.role || user.accessType) === "ADMIN"}
-                     className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 transition-all disabled:opacity-50"
+                     className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-gray-900 dark:text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-600/20 hover:bg-indigo-500 transition-all disabled:opacity-50"
                    >
                      <Save size={14} /> {saving ? "Saving..." : "Save Overrides"}
                    </button>

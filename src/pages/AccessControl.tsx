@@ -22,9 +22,9 @@ type User = {
 
 const roleStyles: Record<Role, { bg: string; text: string; icon: any }> = {
   ADMIN: { bg: "bg-indigo-500/20 border border-indigo-500/30", text: "text-indigo-400", icon: <ShieldAlert size={14} /> },
-  SELLER: { bg: "bg-white/10 border border-white/20", text: "text-white", icon: <ShieldCheck size={14} /> },
-  USER: { bg: "bg-white/5 border border-white/10", text: "text-slate-300", icon: <Users size={14} /> },
-  STAFF: { bg: "bg-white/5 border border-white/10", text: "text-slate-300", icon: <ShieldCheck size={14} /> },
+  SELLER: { bg: "bg-black/10 dark:bg-white/10 border border-white/20", text: "text-white", icon: <ShieldCheck size={14} /> },
+  USER: { bg: "bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10", text: "text-gray-800 dark:text-slate-300", icon: <Users size={14} /> },
+  STAFF: { bg: "bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-white/10", text: "text-gray-800 dark:text-slate-300", icon: <ShieldCheck size={14} /> },
 };
 
 export default function AccessControl() {
@@ -173,10 +173,10 @@ export default function AccessControl() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0B0B1A] flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0B0B1A] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <RefreshCw className="animate-spin text-slate-200" size={32} />
-          <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Synchronizing users...</p>
+          <RefreshCw className="animate-spin text-gray-900 dark:text-slate-200" size={32} />
+          <p className="text-gray-500 dark:text-slate-500 font-bold uppercase tracking-widest text-xs">Synchronizing users...</p>
         </div>
       </div>
     );
@@ -184,22 +184,22 @@ export default function AccessControl() {
 
   return (
     <>
-      <div className="min-h-screen bg-[#0B0B1A] p-4 md:p-8 lg:p-12">
+      <div className="min-h-screen bg-gray-50 dark:bg-[#0B0B1A] p-4 md:p-8 lg:p-12">
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* TOP HEADER */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
-            <div className="flex items-center gap-2 text-slate-200">
+            <div className="flex items-center gap-2 text-gray-900 dark:text-slate-200">
                <Shield size={20} />
                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Administrative Control</span>
             </div>
-            <h1 className="text-4xl font-black text-slate-200 tracking-tight">Access Management</h1>
-            <p className="text-slate-500 max-w-lg font-medium">Configure team roles, permissions, and system-wide visibility controls for your staff.</p>
+            <h1 className="text-4xl font-black text-gray-900 dark:text-slate-200 tracking-tight">Access Management</h1>
+            <p className="text-gray-500 dark:text-slate-500 max-w-lg font-medium">Configure team roles, permissions, and system-wide visibility controls for your staff.</p>
           </div>
 
           <div className="flex flex-wrap gap-3">
-             <Link to="/dashboard/auto-apply" className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-transparent border border-white/10 text-slate-300 hover:bg-white/5 transition-all font-bold text-sm shadow-sm">
+             <Link to="/dashboard/auto-apply" className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-transparent border border-gray-200 dark:border-white/10 text-gray-800 dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/5 transition-all font-bold text-sm shadow-sm">
                 <ArrowLeft size={16} /> Exit to Dashboard
              </Link>
           </div>
@@ -212,22 +212,22 @@ export default function AccessControl() {
           <div className="w-full space-y-6">
             
             {/* SEARCH & FILTER BAR */}
-            <div className="bg-transparent p-4 rounded-3xl border border-white/10 shadow-sm flex flex-col md:flex-row gap-4">
+            <div className="bg-transparent p-4 rounded-3xl border border-gray-200 dark:border-white/10 shadow-sm flex flex-col md:flex-row gap-4">
                <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 dark:text-slate-400" size={18} />
                   <input 
                     type="text" 
                     placeholder="Search by name or email..."
-                    className="w-full pl-12 pr-4 py-3 bg-white/5 border border-transparent rounded-2xl outline-none focus:bg-transparent focus:border-white/10 text-slate-200 font-medium transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-black/5 dark:bg-white/5 border border-transparent rounded-2xl outline-none focus:bg-transparent focus:border-gray-200 dark:border-white/10 text-gray-900 dark:text-slate-200 font-medium transition-all"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                </div>
                <div className="flex gap-2">
-                  <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1 rounded-2xl border border-white/5">
-                     <Lock size={14} className="text-slate-400" />
+                  <div className="flex items-center gap-1.5 bg-black/5 dark:bg-white/5 px-3 py-1 rounded-2xl border border-gray-200 dark:border-white/5">
+                     <Lock size={14} className="text-gray-600 dark:text-slate-400" />
                      <select 
-                       className="bg-transparent border-none outline-none font-black text-[11px] uppercase tracking-widest text-slate-300 py-2 pr-4"
+                       className="bg-transparent border-none outline-none font-black text-[11px] uppercase tracking-widest text-gray-800 dark:text-slate-300 py-2 pr-4"
                        value={loginTypeFilter}
                        onChange={(e) => setLoginTypeFilter(e.target.value as any)}
                      >
@@ -236,10 +236,10 @@ export default function AccessControl() {
                         <option value="CUSTOM">Custom (Local)</option>
                      </select>
                   </div>
-                  <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1 rounded-2xl border border-white/5">
-                     <Filter size={14} className="text-slate-400" />
+                  <div className="flex items-center gap-1.5 bg-black/5 dark:bg-white/5 px-3 py-1 rounded-2xl border border-gray-200 dark:border-white/5">
+                     <Filter size={14} className="text-gray-600 dark:text-slate-400" />
                      <select 
-                       className="bg-transparent border-none outline-none font-black text-[11px] uppercase tracking-widest text-slate-300 py-2 pr-4"
+                       className="bg-transparent border-none outline-none font-black text-[11px] uppercase tracking-widest text-gray-800 dark:text-slate-300 py-2 pr-4"
                        value={roleFilter}
                        onChange={(e) => setRoleFilter(e.target.value as any)}
                      >
@@ -253,14 +253,14 @@ export default function AccessControl() {
             </div>
 
             {/* USERS TABLE */}
-            <div className="bg-transparent rounded-[32px] border border-white/10 shadow-xl overflow-hidden">
+            <div className="bg-transparent rounded-[32px] border border-gray-200 dark:border-white/10 shadow-xl overflow-hidden">
                <div className="overflow-x-auto">
                   <table className="w-full">
                      <thead>
-                        <tr className="bg-white/5 border-b border-white/5">
-                           <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">User Profile</th>
-                           <th className="px-8 py-5 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Status / Role</th>
-                           <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Administrative Actions</th>
+                        <tr className="bg-black/5 dark:bg-white/5 border-b border-gray-200 dark:border-white/5">
+                           <th className="px-8 py-5 text-left text-[10px] font-black text-gray-600 dark:text-slate-400 uppercase tracking-widest">User Profile</th>
+                           <th className="px-8 py-5 text-center text-[10px] font-black text-gray-600 dark:text-slate-400 uppercase tracking-widest">Status / Role</th>
+                           <th className="px-8 py-5 text-right text-[10px] font-black text-gray-600 dark:text-slate-400 uppercase tracking-widest">Administrative Actions</th>
                         </tr>
                      </thead>
                      <tbody className="divide-y divide-slate-50">
@@ -269,21 +269,21 @@ export default function AccessControl() {
                              key={u.id}
                              initial={{ opacity: 0 }}
                              animate={{ opacity: 1 }}
-                             className="hover:bg-white/10 transition-colors group cursor-pointer"
+                             className="hover:bg-black/10 dark:hover:bg-white/10 transition-colors group cursor-pointer"
                              onClick={() => {
                                navigate(`/dashboard/staff/${u.id}`);
                              }}
                            >
                               <td className="px-8 py-6">
                                  <div className="flex items-center gap-4">
-                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg border border-white/10 shadow-lg ${roleStyles[u.role]?.bg} ${roleStyles[u.role]?.text}`}>
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg border border-gray-200 dark:border-white/10 shadow-lg ${roleStyles[u.role]?.bg} ${roleStyles[u.role]?.text}`}>
                                        {u.name?.[0] || 'U'}
                                     </div>
                                     <div>
-                                        <div className="font-black text-slate-200 group-hover:text-indigo-400 transition-colors block text-sm">
+                                        <div className="font-black text-gray-900 dark:text-slate-200 group-hover:text-indigo-400 transition-colors block text-sm">
                                            {u.name || "Pending Account"}
                                         </div>
-                                       <div className="text-xs text-slate-400 font-medium flex items-center gap-2">
+                                       <div className="text-xs text-gray-600 dark:text-slate-400 font-medium flex items-center gap-2">
                                           {u.email}
                                           <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase ${
                                             u.loginType === 'STAFF' ? 'bg-amber-500/10 text-amber-400' : 
@@ -304,7 +304,7 @@ export default function AccessControl() {
                                        {u.role}
                                     </div>
                                     <div className="flex items-center gap-1">
-                                       <div className={`w-1.5 h-1.5 rounded-full ${u.isDisabled ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`} />
+                                       <div className={`w-1.5 h-1.5 rounded-full ${u.isDisabled ? 'bg-rose-500 shadow-sm shadow-rose-500/50' : 'bg-emerald-500 shadow-sm shadow-emerald-500/50'}`} />
                                        <span className={`text-[9px] font-black uppercase tracking-tighter ${u.isDisabled ? 'text-rose-400' : 'text-emerald-400'}`}>
                                           {u.isDisabled ? "Access Revoked" : "Live Session"}
                                        </span>
@@ -315,7 +315,7 @@ export default function AccessControl() {
                               <td className="px-8 py-6">
                                  <div className="flex items-center justify-end gap-3">
                                     <select 
-                                      className="bg-transparent border border-white/10 rounded-xl px-3 py-1.5 text-[10px] font-black uppercase tracking-widest outline-none focus:border-slate-500 hover:bg-white/5 transition-all cursor-pointer disabled:opacity-50"
+                                      className="bg-transparent border border-gray-200 dark:border-white/10 rounded-xl px-3 py-1.5 text-[10px] font-black uppercase tracking-widest outline-none focus:border-slate-500 hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer disabled:opacity-50"
                                       value={u.role}
                                       disabled={u.isDisabled || actionUserId === u.id}
                                       onChange={(e) => changeRole(u.id, e.target.value as Role)}
@@ -326,7 +326,7 @@ export default function AccessControl() {
                                        <option value="ADMIN">Admin</option>
                                     </select>
 
-                                    <div className="w-[1px] h-6 bg-white/5" />
+                                    <div className="w-[1px] h-6 bg-black/5 dark:bg-white/5" />
 
                                      <button 
                                        disabled={actionUserId === u.id || deletingId === u.id}
@@ -334,7 +334,7 @@ export default function AccessControl() {
                                          e.stopPropagation();
                                          toggleUserStatus(u);
                                        }}
-                                       className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${u.isDisabled ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-600 hover:text-slate-200' : 'bg-amber-500/10 text-amber-400 hover:bg-amber-600 hover:text-slate-200'} shadow-sm active:scale-90`}
+                                       className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${u.isDisabled ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-600 hover:text-gray-900 dark:text-slate-200' : 'bg-amber-500/10 text-amber-400 hover:bg-amber-600 hover:text-gray-900 dark:text-slate-200'} shadow-sm active:scale-90`}
                                        title={u.isDisabled ? "Grant Access" : "Revoke Access"}
                                      >
                                         {actionUserId === u.id ? <RefreshCw className="animate-spin" size={16} /> : (
@@ -348,7 +348,7 @@ export default function AccessControl() {
                                          e.stopPropagation();
                                          deleteUser(u);
                                        }}
-                                       className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-600 hover:text-slate-200 flex items-center justify-center transition-all shadow-sm active:scale-90"
+                                       className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-600 hover:text-gray-900 dark:text-slate-200 flex items-center justify-center transition-all shadow-sm active:scale-90"
                                        title="Delete User Permanently"
                                      >
                                         {deletingId === u.id ? <RefreshCw className="animate-spin" size={16} /> : <Trash2 size={18} />}
@@ -361,8 +361,8 @@ export default function AccessControl() {
                   </table>
                   {filteredUsers.length === 0 && (
                      <div className="p-12 text-center space-y-2">
-                        <Users className="mx-auto text-slate-200" size={48} />
-                        <p className="text-slate-400 font-bold">No matching users found in your scope.</p>
+                        <Users className="mx-auto text-gray-900 dark:text-slate-200" size={48} />
+                        <p className="text-gray-600 dark:text-slate-400 font-bold">No matching users found in your scope.</p>
                      </div>
                   )}
                </div>
