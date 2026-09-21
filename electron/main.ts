@@ -1,4 +1,4 @@
-const { app, BrowserWindow, dialog } = require('electron')
+const { app, BrowserWindow, dialog, ipcMain } = require('electron')
 const path = require('path')
 const { autoUpdater } = require('electron-updater');
 const log = require('electron-log');
@@ -8,6 +8,18 @@ log.transports.file.level = "info";
 autoUpdater.logger = log;
 
 let mainWindow;
+
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
+}
 
 try {
   const { startServer } = require('./server.js');
@@ -61,13 +73,25 @@ app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit()
 })
 
+// IPC Handlers for React Frontend
+ipcMain.handle('get-app-version', () => app.getVersion());
+ipcMain.handle('get-app-name', () => app.getName());
+ipcMain.handle('check-for-updates', () => autoUpdater.checkForUpdatesAndNotify());
+ipcMain.handle('install-update', () => autoUpdater.quitAndInstall());
+
 // Auto Updater Events
 autoUpdater.on('update-available', (info) => {
   log.info('Update available.');
+  if (mainWindow) {
+    mainWindow.webContents.send('update-available', info);
+  }
 });
 
 autoUpdater.on('update-downloaded', (info) => {
   log.info('Update downloaded');
+  if (mainWindow) {
+    mainWindow.webContents.send('update-downloaded', info);
+  }
   const dialogOpts = {
     type: 'info',
     buttons: ['Restart and Install', 'Later'],
@@ -82,3 +106,4 @@ autoUpdater.on('update-downloaded', (info) => {
     }
   });
 });
+

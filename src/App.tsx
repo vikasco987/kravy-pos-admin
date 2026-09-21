@@ -6,6 +6,7 @@ import AutoApply from './pages/AutoApply'
 import BrowseProducts from './pages/BrowseProducts'
 import AccessControl from './pages/AccessControl'
 import UserPortal from './pages/UserPortal'
+import Settings from './pages/Settings'
 import SidebarLayout from './layouts/SidebarLayout'
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
           <Route path="/dashboard/menu/view" element={<BrowseProducts />} />
           <Route path="/dashboard/staff" element={<AccessControl />} />
           <Route path="/dashboard/staff/:id" element={<UserPortal />} />
+          <Route path="/dashboard/settings" element={<Settings />} />
         </Route>
       </Routes>
     </HashRouter>

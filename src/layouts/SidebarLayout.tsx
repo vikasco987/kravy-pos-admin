@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Sparkles, LayoutGrid, LogOut, Users, Moon, Sun, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { Sparkles, LayoutGrid, LogOut, Users, Moon, Sun, ChevronLeft, ChevronRight, Settings, Search } from 'lucide-react';
 import { useTheme } from '../components/ThemeProvider';
 
 export default function SidebarLayout() {
@@ -9,11 +8,23 @@ export default function SidebarLayout() {
     const { resolvedTheme, toggleTheme } = useTheme();
     const isDark = resolvedTheme === "dark";
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const navItems = [
+        { name: "Auto Apply", path: "/dashboard/auto-apply", icon: Sparkles },
+        { name: "Browse Products", path: "/dashboard/menu/view", icon: LayoutGrid },
+        { name: "Access Control", path: "/dashboard/staff", icon: Users },
+        { name: "Settings", path: "/dashboard/settings", icon: Settings }
+    ];
+
+    const filteredNavItems = navItems.filter(item => 
+        item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <div className="flex h-screen bg-gray-50 dark:bg-[#0B0B1A] font-['Outfit'] text-gray-900 dark:text-gray-100 overflow-hidden">
             {/* Sidebar */}
-            <div className={`${isCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 ease-in-out bg-white dark:bg-[#1A1A2E] border-r border-gray-200 dark:border-gray-800 flex flex-col justify-between relative z-10`}>
+            <div className={`${isCollapsed ? 'w-20' : 'w-72'} transition-all duration-300 ease-in-out bg-white dark:bg-[#1A1A2E] border-r border-gray-200 dark:border-gray-800 flex flex-col justify-between relative z-10`}>
                 <div>
                     <div className={`p-6 border-b border-gray-200 dark:border-gray-800 flex items-center ${isCollapsed ? 'justify-center px-4' : 'gap-3'} relative`}>
                         <img src="/logo.png" alt="Kravy Logo" className={`${isCollapsed ? 'w-8 h-8' : 'w-10 h-10'} object-contain rounded-xl transition-all duration-300`} />
@@ -30,31 +41,42 @@ export default function SidebarLayout() {
                             {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                         </button>
                     </div>
-                    <div className={`p-4 space-y-2 ${isCollapsed ? 'flex flex-col items-center' : ''}`}>
-                        <NavLink 
-                            to="/dashboard/auto-apply" 
-                            title={isCollapsed ? "Auto Apply" : undefined}
-                            className={({ isActive }) => `flex items-center gap-3 ${isCollapsed ? 'px-3 justify-center' : 'px-4'} py-3 rounded-xl font-bold transition-all ${isActive ? 'bg-orange-500 text-white shadow-md' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#0F0F23] hover:text-gray-900 dark:hover:text-white'}`}
-                        >
-                            <Sparkles className="w-5 h-5 flex-shrink-0" />
-                            {!isCollapsed && <span className="whitespace-nowrap">Auto Apply</span>}
-                        </NavLink>
-                        <NavLink 
-                            to="/dashboard/menu/view" 
-                            title={isCollapsed ? "Browse Products" : undefined}
-                            className={({ isActive }) => `flex items-center gap-3 ${isCollapsed ? 'px-3 justify-center' : 'px-4'} py-3 rounded-xl font-bold transition-all ${isActive ? 'bg-orange-500 text-white shadow-md' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#0F0F23] hover:text-gray-900 dark:hover:text-white'}`}
-                        >
-                            <LayoutGrid className="w-5 h-5 flex-shrink-0" />
-                            {!isCollapsed && <span className="whitespace-nowrap">Browse Products</span>}
-                        </NavLink>
-                        <NavLink 
-                            to="/dashboard/staff" 
-                            title={isCollapsed ? "Access Control" : undefined}
-                            className={({ isActive }) => `flex items-center gap-3 ${isCollapsed ? 'px-3 justify-center' : 'px-4'} py-3 rounded-xl font-bold transition-all ${isActive ? 'bg-orange-500 text-white shadow-md' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#0F0F23] hover:text-gray-900 dark:hover:text-white'}`}
-                        >
-                            <Users className="w-5 h-5 flex-shrink-0" />
-                            {!isCollapsed && <span className="whitespace-nowrap">Access Control</span>}
-                        </NavLink>
+
+                    {!isCollapsed && (
+                        <div className="px-4 pt-4 pb-2">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <input 
+                                    type="text" 
+                                    placeholder="Search pages..." 
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-[#0F0F23] border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white transition-all"
+                                />
+                            </div>
+                        </div>
+                    )}
+                    
+                    <div className={`p-4 space-y-2 ${isCollapsed ? 'flex flex-col items-center pt-6' : ''}`}>
+                        {filteredNavItems.length > 0 ? (
+                            filteredNavItems.map((item) => (
+                                <NavLink 
+                                    key={item.path}
+                                    to={item.path} 
+                                    title={isCollapsed ? item.name : undefined}
+                                    className={({ isActive }) => `flex items-center gap-3 ${isCollapsed ? 'px-3 justify-center' : 'px-4'} py-3 rounded-xl font-bold transition-all ${isActive ? 'bg-orange-500 text-white shadow-md' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#0F0F23] hover:text-gray-900 dark:hover:text-white'}`}
+                                >
+                                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                                    {!isCollapsed && <span className="whitespace-nowrap">{item.name}</span>}
+                                </NavLink>
+                            ))
+                        ) : (
+                            !isCollapsed && (
+                                <div className="text-center py-4 text-sm text-gray-500">
+                                    No results found
+                                </div>
+                            )
+                        )}
                     </div>
                 </div>
                 
