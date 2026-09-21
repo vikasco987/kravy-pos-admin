@@ -1,7 +1,7 @@
 {
   "name": "kravy-electron-lite",
   "productName": "Kravy POS Lite",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Kravy POS Lite",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -12,6 +12,7 @@
   },
   "build": {
     "appId": "com.kravy.lite",
+    "artifactName": "Kravy-POS-Lite-Setup-${version}.${ext}",
     "asar": false,
     "files": [
       "**/*",
