@@ -18,5 +18,7 @@ window.addEventListener('DOMContentLoaded', () => {
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   installUpdate: () => ipcRenderer.invoke('install-update'),
   onUpdateAvailable: (callback: any) => ipcRenderer.on('update-available', callback),
-  onUpdateDownloaded: (callback: any) => ipcRenderer.on('update-downloaded', callback)
+  onUpdateDownloaded: (callback: any) => ipcRenderer.on('update-downloaded', callback),
+  onUpdateNotAvailable: (callback: any) => ipcRenderer.on('update-not-available', callback),
+  onUpdateError: (callback: any) => ipcRenderer.on('update-error', callback)
 };

@@ -9,6 +9,8 @@ import { usePathname } from "next/navigation";
 import { FiSearch } from "react-icons/fi";
 import { HiOutlineMoon, HiOutlineSun } from "react-icons/hi";
 
+import logoImg from '../assets/logo.png';
+import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { useAuthContext } from "./AuthContext";
 import { kravy } from "@/lib/sounds";
 
@@ -129,7 +131,7 @@ export default function ResponsiveHeader() {
             {/* left - logo */}
             <div className="flex items-center gap-3">
               <Link href="/" className="flex items-center gap-3">
-                <img src="/logo.png" alt="Kravy Logo" className="w-10 h-10 object-contain rounded-lg shadow-sm" />
+                <img src={logoImg} alt="Kravy Logo" className="w-10 h-10 object-contain rounded-lg shadow-sm" />
                 <div className="hidden sm:block">
                   <div className="text-lg font-semibold dark:text-white">Kravy</div>
                   <div className="text-xs text-slate-500 dark:text-slate-300">Billing</div>

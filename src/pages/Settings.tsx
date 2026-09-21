@@ -4,7 +4,8 @@ import { Settings as SettingsIcon, Info, DownloadCloud, CheckCircle2, RotateCw }
 export default function Settings() {
     const [appVersion, setAppVersion] = useState<string>('Loading...');
     const [appName, setAppName] = useState<string>('Loading...');
-    const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'available' | 'downloaded'>('idle');
+    const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'available' | 'downloaded' | 'up-to-date' | 'error'>('idle');
+    const [updateErrorMsg, setUpdateErrorMsg] = useState<string>('');
 
     useEffect(() => {
         if (window.electronAPI) {
@@ -17,6 +18,17 @@ export default function Settings() {
 
             window.electronAPI.onUpdateDownloaded(() => {
                 setUpdateStatus('downloaded');
+            });
+
+            window.electronAPI.onUpdateNotAvailable(() => {
+                setUpdateStatus('up-to-date');
+                setTimeout(() => setUpdateStatus('idle'), 4000);
+            });
+
+            window.electronAPI.onUpdateError((_event, err) => {
+                setUpdateErrorMsg(err?.toString() || 'Unknown error');
+                setUpdateStatus('error');
+                setTimeout(() => setUpdateStatus('idle'), 6000);
             });
         }
     }, []);
@@ -139,6 +151,20 @@ export default function Settings() {
                                     >
                                         Restart & Install
                                     </button>
+                                </div>
+                            )}
+
+                            {updateStatus === 'up-to-date' && (
+                                <div className="text-center py-4">
+                                    <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-3" />
+                                    <p className="font-semibold text-sm text-blue-50">App is already up to date!</p>
+                                </div>
+                            )}
+
+                            {updateStatus === 'error' && (
+                                <div className="text-center py-4">
+                                    <p className="font-semibold text-sm text-red-300 mb-2">Update Check Failed</p>
+                                    <p className="text-xs text-red-200">{updateErrorMsg}</p>
                                 </div>
                             )}
                         </div>

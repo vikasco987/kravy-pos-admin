@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Sparkles, LayoutGrid, LogOut, Users, Moon, Sun, ChevronLeft, ChevronRight, Settings, Search } from 'lucide-react';
 import { useTheme } from '../components/ThemeProvider';
+import logoImg from '../assets/logo.png';
 
 export default function SidebarLayout() {
     const navigate = useNavigate();
@@ -27,7 +28,7 @@ export default function SidebarLayout() {
             <div className={`${isCollapsed ? 'w-20' : 'w-72'} transition-all duration-300 ease-in-out bg-white dark:bg-[#1A1A2E] border-r border-gray-200 dark:border-gray-800 flex flex-col justify-between relative z-10`}>
                 <div>
                     <div className={`p-6 border-b border-gray-200 dark:border-gray-800 flex items-center ${isCollapsed ? 'justify-center px-4' : 'gap-3'} relative`}>
-                        <img src="/logo.png" alt="Kravy Logo" className={`${isCollapsed ? 'w-8 h-8' : 'w-10 h-10'} object-contain rounded-xl transition-all duration-300`} />
+                        <img src={logoImg} alt="Kravy Logo" className={`${isCollapsed ? 'w-8 h-8' : 'w-10 h-10'} object-contain rounded-xl transition-all duration-300`} />
                         {!isCollapsed && (
                             <div className="transition-opacity duration-300">
                                 <h2 className="text-xl font-black text-blue-600 dark:text-blue-500">Kravy</h2>

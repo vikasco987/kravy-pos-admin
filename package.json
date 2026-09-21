@@ -1,7 +1,7 @@
 {
   "name": "kravy-electron-lite",
   "productName": "Kravy POS Lite",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "Kravy POS Lite",
   "main": "dist-electron/main.js",
   "scripts": {

@@ -106,4 +106,16 @@ autoUpdater.on('update-downloaded', (info) => {
     }
   });
 });
+autoUpdater.on('update-not-available', (info) => {
+  log.info('Update not available.');
+  if (mainWindow) {
+    mainWindow.webContents.send('update-not-available', info);
+  }
+});
 
+autoUpdater.on('error', (err) => {
+  log.error('Error in auto-updater. ' + err);
+  if (mainWindow) {
+    mainWindow.webContents.send('update-error', err?.message || err?.toString() || 'Unknown error');
+  }
+});
