@@ -6,6 +6,7 @@ export default function Settings() {
     const [appName, setAppName] = useState<string>('Loading...');
     const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'available' | 'downloaded' | 'up-to-date' | 'error'>('idle');
     const [updateErrorMsg, setUpdateErrorMsg] = useState<string>('');
+    const [downloadProgress, setDownloadProgress] = useState<number>(0);
 
     useEffect(() => {
         if (window.electronAPI) {
@@ -14,11 +15,20 @@ export default function Settings() {
 
             window.electronAPI.onUpdateAvailable(() => {
                 setUpdateStatus('available');
+                setDownloadProgress(0);
             });
 
             window.electronAPI.onUpdateDownloaded(() => {
                 setUpdateStatus('downloaded');
             });
+
+            if (window.electronAPI.onDownloadProgress) {
+                window.electronAPI.onDownloadProgress((_event: any, progressObj: any) => {
+                    if (progressObj && typeof progressObj.percent === 'number') {
+                        setDownloadProgress(Math.round(progressObj.percent));
+                    }
+                });
+            }
 
             window.electronAPI.onUpdateNotAvailable(() => {
                 setUpdateStatus('up-to-date');
@@ -134,7 +144,14 @@ export default function Settings() {
                             {updateStatus === 'available' && (
                                 <div className="text-center py-4">
                                     <DownloadCloud className="w-8 h-8 text-blue-200 mx-auto mb-3 animate-bounce" />
-                                    <p className="font-semibold text-sm text-blue-50">Downloading update in background...</p>
+                                    <p className="font-semibold text-sm text-blue-50 mb-3">Downloading update...</p>
+                                    <div className="w-full bg-black/30 rounded-full h-2 mb-1.5 overflow-hidden">
+                                        <div 
+                                            className="bg-emerald-400 h-2 rounded-full transition-all duration-300 ease-out" 
+                                            style={{ width: `${downloadProgress}%` }}
+                                        ></div>
+                                    </div>
+                                    <p className="text-xs font-medium text-blue-100">{downloadProgress}% completed</p>
                                 </div>
                             )}
 

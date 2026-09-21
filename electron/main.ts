@@ -106,6 +106,12 @@ autoUpdater.on('update-downloaded', (info) => {
     }
   });
 });
+autoUpdater.on('download-progress', (progressObj) => {
+  if (mainWindow) {
+    mainWindow.webContents.send('download-progress', progressObj);
+  }
+});
+
 autoUpdater.on('update-not-available', (info) => {
   log.info('Update not available.');
   if (mainWindow) {
