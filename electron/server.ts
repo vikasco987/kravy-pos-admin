@@ -612,12 +612,16 @@ app.get('/api/proxy/google-image-search', async (req, res) => {
 });
 function normalizeVariants(menu: any[]) {
     const variantSuffixes = ['small', 'medium', 'large', 's', 'm', 'l', 'half', 'full', 'quarter', 'regular', 'jumbo', '250g', '500g', '1kg'];
-    const grouped = new Map();
     const finalMenu: any[] = [];
+    const grouped = new Map();
+    let lastBaseItem = null;
+    let fallbackBaseName = "";
     
     for (const item of menu) {
         if (item.variants && item.variants.length > 0) {
-            finalMenu.push(item);
+            finalMenu.push({ type: 'normal', item });
+            lastBaseItem = item;
+            fallbackBaseName = item.name;
             continue;
         }
 
@@ -626,12 +630,22 @@ function normalizeVariants(menu: any[]) {
         let variantName = "";
         
         for (const suffix of variantSuffixes) {
-            // Escape suffix if necessary (though our list is alphanumeric)
+            // Check for EXACT suffix match (e.g. "Small")
+            const exactRegex = new RegExp(`^(${suffix})(?:\\s*\\))?$`, 'i');
+            const exactMatch = (item.name || "").trim().match(exactRegex);
+            
+            if (exactMatch && fallbackBaseName) {
+                baseName = fallbackBaseName;
+                variantName = exactMatch[1].trim();
+                isVariant = true;
+                break;
+            }
+            
+            // Check for suffix with separator (e.g. "Pizza - Small" or "Pizza Small")
             const regex = new RegExp(`[\\s\\-_\\(]+(${suffix})(?:\\s*\\))?\\s*$`, 'i');
-            const match = item.name.match(regex);
+            const match = (item.name || "").match(regex);
             if (match) {
                 const potentialBase = item.name.replace(regex, '').trim();
-                // Ensure base name is substantial enough
                 if (potentialBase.length > 1) {
                     baseName = potentialBase;
                     variantName = match[1].trim();
@@ -655,33 +669,72 @@ function normalizeVariants(menu: any[]) {
                 });
             }
             grouped.get(mapKey).items.push({ originalItem: item, variantName });
+            // Even if it's a variant, it might be a false positive, so update fallback
+            fallbackBaseName = baseName;
         } else {
-            finalMenu.push(item);
+            finalMenu.push({ type: 'normal', item });
+            fallbackBaseName = item.name;
         }
     }
     
+    // Now resolve grouped items
+    const resolvedMenu: any[] = [];
+    
+    // Convert finalMenu into a map for fast lookup of standalone base items
+    const baseItemMap = new Map();
+    for (const entry of finalMenu) {
+        if (entry.type === 'normal') {
+            const catKey = (entry.item.category || "Uncategorized").trim().toLowerCase();
+            const mapKey = `${catKey}::${(entry.item.name || "").toLowerCase()}`;
+            if (!baseItemMap.has(mapKey)) {
+                baseItemMap.set(mapKey, []);
+            }
+            baseItemMap.get(mapKey).push(entry);
+        }
+    }
+
     for (const [mapKey, group] of grouped.entries()) {
-        if (group.items.length > 1) {
-            // High confidence: multiple variants found for the same base name
-            const mergedItem = {
-                name: group.baseName,
-                category: group.category,
-                type: group.type,
-                description: group.description,
-                price: group.items[0].originalItem.price,
-                variants: group.items.map((vItem: any) => ({
+        const matchingBaseEntries = baseItemMap.get(mapKey) || [];
+        
+        // If we found multiple variants OR we found a matching base item without variants
+        if (group.items.length > 1 || matchingBaseEntries.length > 0) {
+            
+            let baseItemToMutate: any = null;
+            if (matchingBaseEntries.length > 0) {
+                // Merge into the first matching base item
+                baseItemToMutate = matchingBaseEntries[0].item;
+                matchingBaseEntries[0].type = 'merged'; 
+            } else {
+                // Create a new base item
+                baseItemToMutate = {
+                    name: group.baseName,
+                    category: group.category,
+                    type: group.type,
+                    description: group.description,
+                    price: group.items[0].originalItem.price,
+                };
+                resolvedMenu.push(baseItemToMutate);
+            }
+            
+            if (!baseItemToMutate.variants) baseItemToMutate.variants = [];
+            
+            for (const vItem of group.items) {
+                baseItemToMutate.variants.push({
                     name: vItem.variantName,
                     price: vItem.originalItem.price
-                }))
-            };
-            finalMenu.push(mergedItem);
+                });
+            }
         } else {
-            // Low confidence: only 1 variant matched, just keep the original item
-            finalMenu.push(group.items[0].originalItem);
+            // Low confidence: only 1 variant matched, and no base item found. Just keep original.
+            resolvedMenu.push(group.items[0].originalItem);
         }
     }
     
-    return finalMenu;
+    for (const entry of finalMenu) {
+        resolvedMenu.push(entry.item);
+    }
+    
+    return resolvedMenu;
 }
 
 // --- Merchant Onboarding & Menu Management API ---
