@@ -38,6 +38,8 @@ export function parseMenuLocal(rawText: string): { menu: any[], confidence: numb
     let foundCategories = 0;
     let possibleNoise = 0;
     
+    let lastNonPriceLine = "";
+    
     // Very basic deterministic parser
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
@@ -46,17 +48,45 @@ export function parseMenuLocal(rawText: string): { menu: any[], confidence: numb
         if (line === line.toUpperCase() && line.length > 2 && line.length < 30 && !/\d/.test(line)) {
             currentCategory = line;
             foundCategories++;
+            lastNonPriceLine = ""; // Reset on category
             continue;
         }
         
-        const priceMatch = line.match(/(?:rs\.?|₹|\$)?\s*(\d{1,4}(?:\.\d{2})?)\s*$/i);
+        // Match one or more prices separated by slashes at the end of the line
+        const priceMatch = line.match(/(?:rs\.?|₹|\$)?\s*(\d{1,4}(?:\.\d{2})?(?:\s*\/\s*\d{1,4}(?:\.\d{2})?)*)\s*$/i);
         
         if (priceMatch) {
             foundPrices++;
             
             // Clean up the name by removing the price portion
-            const name = line.replace(/(?:rs\.?|₹|\$)?\s*(\d{1,4}(?:\.\d{2})?)\s*$/i, '').trim();
-            const price = parseFloat(priceMatch[1]);
+            let name = line.replace(/(?:rs\.?|₹|\$)?\s*(\d{1,4}(?:\.\d{2})?(?:\s*\/\s*\d{1,4}(?:\.\d{2})?)*)\s*$/i, '').trim();
+            
+            // If the name is exactly a variant suffix, it might be a variant of the previous item line
+            const isJustVariant = ['small', 'medium', 'large', 's', 'm', 'l', 'half', 'full', 'quarter', 'regular', 'jumbo', '250g', '500g', '1kg', 'basic', 'special', 'premium'].includes(name.toLowerCase());
+            if (isJustVariant && lastNonPriceLine) {
+                name = `${lastNonPriceLine} ${name}`;
+            } else if (!isJustVariant) {
+                // If it's a full item with a price, reset the last non-price line
+                lastNonPriceLine = "";
+            }
+
+            const priceStrings = priceMatch[1].split('/').map(p => p.trim());
+            const basePrice = parseFloat(priceStrings[0]);
+
+            let variants: any[] = [];
+            if (priceStrings.length > 1) {
+                if (priceStrings.length === 2) {
+                    variants = [
+                        { name: "Half", price: parseFloat(priceStrings[0]) },
+                        { name: "Full", price: parseFloat(priceStrings[1]) }
+                    ];
+                } else {
+                    variants = priceStrings.map((p, idx) => ({
+                        name: `Size ${idx + 1}`,
+                        price: parseFloat(p)
+                    }));
+                }
+            }
             
             // Stricter check for valid names: 
             // 1. Shouldn't be just numbers
@@ -71,15 +101,20 @@ export function parseMenuLocal(rawText: string): { menu: any[], confidence: numb
                 menuItems.push({
                     category: currentCategory,
                     name: name,
-                    price: price,
+                    price: variants.length > 0 ? 0 : basePrice,
                     type: /paneer|veg|aloo|mushroom/i.test(name) ? "veg" : /chicken|mutton|fish/i.test(name) ? "non_veg" : "veg",
                     description: "",
-                    variants: []
+                    variants: variants
                 });
             } else {
                 possibleNoise++;
             }
         } else {
+            // If it's not a category and not a price, it might be a base item name (like "Margherita Pizza")
+            if (line.length > 3 && line.length < 50 && /[a-zA-Z]/.test(line)) {
+                // Remove numbers (like "1. " from "1. Margherita Pizza")
+                lastNonPriceLine = line.replace(/^\d+\.?\s*/, '').trim();
+            }
             possibleNoise++;
         }
     }
