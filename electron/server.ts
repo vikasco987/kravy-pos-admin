@@ -249,7 +249,12 @@ Also, please search the top/header/footer of the document to extract the busines
       "c": "Category Name",
       "n": "Item Name",
       "p": 250,
-      "t": "Pure Veg"
+      "t": "Pure Veg",
+      "d": "Description if any",
+      "v": [
+        { "name": "Half", "price": 150 },
+        { "name": "Full", "price": 250 }
+      ]
     }
   ]
 }
@@ -258,7 +263,21 @@ Strictly follow these rules:
 1. Return ONLY the raw JSON object. Do not add any conversational text.
 2. Group items under correct categories.
 3. Normalize all spelling and format.
-4. Ensure the output is valid JSON. Do NOT output descriptions or variants.
+4. CRITICAL RULE ON VARIANTS & COLUMNS:
+Menus often have tabular layouts where sizes are in columns. You MUST map prices to their correct rows and group variants correctly!
+Example Column Input:
+                 Small  Medium  Large
+Pizza Margherita 199    299     399
+Pizza Farmhouse  250    350     450
+
+Expected Output MUST NOT split items. It MUST be:
+[
+  {"n": "Pizza Margherita", "v": [{"name": "Small", "price": 199}, {"name": "Medium", "price": 299}, {"name": "Large", "price": 399}]},
+  {"n": "Pizza Farmhouse", "v": [{"name": "Small", "price": 250}, {"name": "Medium", "price": 350}, {"name": "Large", "price": 450}]}
+]
+Do NOT create items like "Pizza Margherita Small" or mix prices between rows. Group all sizes/variants (S/M/L, Half/Full, 250g/500g, etc.) under the correct parent item.
+5. If two completely different items have their own names (e.g. "Pizza Margherita" and "Pizza Farmhouse"), treat them as separate items, NOT variants of "Pizza".
+6. DO NOT INVENT PRICES. If a price is missing from the menu, do not set it to 0. Leave it empty/null.
 ${languageRule}
 6. EXTREME IMPORTANCE: DO NOT SKIP ANY ITEMS. YOU MUST EXTRACT EVERY SINGLE ROW, NO MATTER HOW LONG THE DOCUMENT IS. NEVER TRUNCATE.
 7. THIS DOCUMENT CONTAINS MULTIPLE PAGES (often 10+ pages). You MUST read through EVERY single page from start to finish.
@@ -591,16 +610,93 @@ app.get('/api/proxy/google-image-search', async (req, res) => {
         return res.status(500).json({ success: false, error: error.message });
     }
 });
+function normalizeVariants(menu: any[]) {
+    const variantSuffixes = ['small', 'medium', 'large', 's', 'm', 'l', 'half', 'full', 'quarter', 'regular', 'jumbo', '250g', '500g', '1kg'];
+    const grouped = new Map();
+    const finalMenu: any[] = [];
+    
+    for (const item of menu) {
+        if (item.variants && item.variants.length > 0) {
+            finalMenu.push(item);
+            continue;
+        }
+
+        let isVariant = false;
+        let baseName = item.name || "";
+        let variantName = "";
+        
+        for (const suffix of variantSuffixes) {
+            // Escape suffix if necessary (though our list is alphanumeric)
+            const regex = new RegExp(`[\\s\\-_\\(]+(${suffix})(?:\\s*\\))?\\s*$`, 'i');
+            const match = item.name.match(regex);
+            if (match) {
+                const potentialBase = item.name.replace(regex, '').trim();
+                // Ensure base name is substantial enough
+                if (potentialBase.length > 1) {
+                    baseName = potentialBase;
+                    variantName = match[1].trim();
+                    isVariant = true;
+                    break;
+                }
+            }
+        }
+        
+        if (isVariant) {
+            const catKey = (item.category || "Uncategorized").trim().toLowerCase();
+            const mapKey = `${catKey}::${baseName.toLowerCase()}`;
+            
+            if (!grouped.has(mapKey)) {
+                grouped.set(mapKey, { 
+                    baseName: baseName, 
+                    category: item.category, 
+                    type: item.type, 
+                    description: item.description, 
+                    items: [] 
+                });
+            }
+            grouped.get(mapKey).items.push({ originalItem: item, variantName });
+        } else {
+            finalMenu.push(item);
+        }
+    }
+    
+    for (const [mapKey, group] of grouped.entries()) {
+        if (group.items.length > 1) {
+            // High confidence: multiple variants found for the same base name
+            const mergedItem = {
+                name: group.baseName,
+                category: group.category,
+                type: group.type,
+                description: group.description,
+                price: group.items[0].originalItem.price,
+                variants: group.items.map((vItem: any) => ({
+                    name: vItem.variantName,
+                    price: vItem.originalItem.price
+                }))
+            };
+            finalMenu.push(mergedItem);
+        } else {
+            // Low confidence: only 1 variant matched, just keep the original item
+            finalMenu.push(group.items[0].originalItem);
+        }
+    }
+    
+    return finalMenu;
+}
+
 // --- Merchant Onboarding & Menu Management API ---
 
 app.post('/api/merchant/onboard', async (req, res) => {
     try {
-        const { email, phone, password, restaurantName, menu, address, timings, contactPhone } = req.body;
+        const { email, phone, password, restaurantName, menu: rawMenu, address, timings, contactPhone } = req.body;
         
-        if (!email || !password || !restaurantName || !menu || !Array.isArray(menu)) {
+        if (!email || !password || !restaurantName || !rawMenu || !Array.isArray(rawMenu)) {
             return res.status(400).json({ success: false, error: "Malformed payload. Required: email, password, restaurantName, menu[]" });
         }
 
+        const menu = normalizeVariants(rawMenu);
+        console.log(`[Merchant Onboard] Normalized menu length: ${menu.length}. Raw length: ${rawMenu.length}`);
+        
         const normalizedEmail = email.trim().toLowerCase();
         const normalizedPhone = phone ? phone.trim().toLowerCase() : undefined;
 
@@ -662,7 +758,6 @@ app.post('/api/merchant/onboard', async (req, res) => {
                 }
             }
 
-            // Create Items
             const itemsToCreate = menu.map((item: any) => {
                 const catKey = (item.category || "Uncategorized").trim().toLowerCase();
                 const catId = categoryMap.get(catKey) || null;
@@ -670,16 +765,46 @@ app.post('/api/merchant/onboard', async (req, res) => {
                 // Safeguard 5: Image Metadata mapping from img_status / assigned_image
                 const imageUrl = (item.imageUrl && typeof item.imageUrl === 'string') ? item.imageUrl : (item.assigned_image && typeof item.assigned_image === 'string' ? item.assigned_image : null);
 
+                let dbVariants = undefined;
+                if (item.variants && Array.isArray(item.variants) && item.variants.length > 0) {
+                    dbVariants = [
+                        {
+                            id: require('crypto').randomUUID(),
+                            groupName: "Variants",
+                            type: "radio",
+                            required: true,
+                            options: item.variants.map((v: any) => {
+                                const p = parseFloat(v.price || v.p);
+                                return {
+                                    id: require('crypto').randomUUID(),
+                                    name: v.name || v.n || "Option",
+                                    price: isNaN(p) ? null : p
+                                };
+                            })
+                        }
+                    ];
+                }
+
+                let basePrice: number | null = parseFloat(item.price);
+                if (isNaN(basePrice)) {
+                    if (dbVariants && dbVariants[0].options.length > 0 && dbVariants[0].options[0].price !== null) {
+                        basePrice = dbVariants[0].options[0].price;
+                    } else {
+                        basePrice = null;
+                    }
+                }
+
                 return {
                     name: item.name,
-                    price: parseFloat(item.price) || 0,
+                    price: basePrice,
                     description: item.description || null,
                     categoryId: catId,
                     userId: user.id,
                     clerkId,
                     image: imageUrl,
                     imageUrl: imageUrl,
-                    isActive: true
+                    isActive: true,
+                    variants: dbVariants
                 };
             });
 
