@@ -208,7 +208,7 @@ app.post('/api/menu/upload-ocr', upload.any(), async (req, res) => {
                      address: "Delhi NCR",
                      timings: "11:00 AM - 11:00 PM",
                      phone: "9999999999",
-                     menu: localParseResult.menu
+                     menu: normalizeVariants(localParseResult.menu)
                  });
              } else {
                  console.log(`[Menu AI OCR Engine] Low confidence (${localParseResult.confidence}%). Falling back to AI...`);
@@ -443,7 +443,7 @@ ${languageRule}
             address: parsedMenu.a || parsedMenu.address || "Delhi NCR",
             timings: parsedMenu.ti || parsedMenu.timings || "11:00 AM - 11:00 PM",
             phone: parsedMenu.ph || parsedMenu.phone || "9999999999",
-            menu: menuItems
+            menu: normalizeVariants(menuItems)
         });
 
     } catch (e: any) {
@@ -464,7 +464,7 @@ app.post("/api/menu/post-process", express.json(), (req, res) => {
     try {
         const parsedMenu = req.body;
         let menuItems = parsedMenu.menu || [];
-        res.json({ success: true, menu: menuItems, original: parsedMenu });
+        res.json({ success: true, menu: normalizeVariants(menuItems), original: parsedMenu });
     } catch (e: any) {
         res.status(500).json({ error: e.message });
     }
