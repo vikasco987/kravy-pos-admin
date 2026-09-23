@@ -1148,6 +1148,7 @@ app.post('/api/menu/bulk-upload', async (req, res) => {
                     userId,
                     categoryId: catId,
                     zones: itemZones,
+                    variants: item.variants && item.variants.length > 0 ? item.variants : undefined,
                     isActive: true
                 }
             });
@@ -1447,6 +1448,45 @@ app.delete('/api/admin/users', async (req, res) => {
         await prisma.user.delete({ where: { id: String(userId) } });
 
         res.json({ success: true });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/system/backup', async (req, res) => {
+    try {
+        const users = await prisma.user.findMany();
+        const categories = await prisma.category.findMany();
+        const items = await prisma.item.findMany();
+        
+        const backupData = {
+            metadata: {
+                timestamp: new Date().toISOString(),
+                version: "1.0"
+            },
+            data: {
+                users,
+                categories,
+                items
+            }
+        };
+
+        const os = require('os');
+        const fs = require('fs');
+        const path = require('path');
+        
+        const downloadsPath = path.join(os.homedir(), 'Downloads');
+        
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0];
+        const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+        const fileName = `kravy_backup_${dateStr}_${timeStr}.json`;
+        
+        const fullPath = path.join(downloadsPath, fileName);
+        
+        fs.writeFileSync(fullPath, JSON.stringify(backupData, null, 2));
+        
+        res.json({ success: true, path: fullPath, fileName });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }

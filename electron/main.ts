@@ -7,6 +7,9 @@ const log = require('electron-log');
 log.transports.file.level = "info";
 autoUpdater.logger = log;
 
+// Fix for "tile memory limits exceeded" (elements disappearing on scroll)
+app.disableHardwareAcceleration();
+
 let mainWindow;
 
 const gotTheLock = app.requestSingleInstanceLock();

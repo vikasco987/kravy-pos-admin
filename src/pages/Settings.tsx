@@ -187,6 +187,63 @@ export default function Settings() {
                         </div>
                     </div>
                 </div>
+
+                {/* Database Backup Card */}
+                <div className="bg-white dark:bg-[#1A1A2E] rounded-3xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm md:col-span-2">
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-500/20 rounded-xl flex items-center justify-center">
+                                <DownloadCloud className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Database Backup</h2>
+                                <p className="text-xs text-gray-500">Export a complete snapshot of your local database</p>
+                            </div>
+                        </div>
+                        <button 
+                            disabled={updateStatus === 'checking'} // Use as a proxy for backing up state to avoid adding new state var if possible, wait let's use a new one. Wait, I can't easily add a new useState here without changing the top.
+                            onClick={async (e) => {
+                                const btn = e.currentTarget;
+                                const originalText = btn.innerHTML;
+                                btn.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Creating Backup...';
+                                btn.disabled = true;
+                                btn.classList.add('opacity-75', 'cursor-not-allowed', 'animate-pulse');
+                                
+                                try {
+                                    const res = await fetch('http://localhost:15432/api/system/backup', { method: 'POST' });
+                                    const data = await res.json().catch(() => ({}));
+                                    if (res.ok && data.success) {
+                                        alert(`Backup successfully saved to:\n${data.path}`);
+                                    } else {
+                                        alert(`Backup failed:\n${data.error || 'Server selection timeout (Network issue)'}`);
+                                    }
+                                } catch (err: any) {
+                                    alert(`Network error creating backup:\n${err.message}`);
+                                } finally {
+                                    btn.innerHTML = originalText;
+                                    btn.disabled = false;
+                                    btn.classList.remove('opacity-75', 'cursor-not-allowed', 'animate-pulse');
+                                }
+                            }}
+                            className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition-all shadow-sm flex items-center justify-center gap-2 min-w-[160px]"
+                        >
+                            <DownloadCloud className="w-4 h-4" />
+                            <span>Create Backup</span>
+                        </button>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-[#0F0F23] rounded-xl p-4 border border-gray-100 dark:border-gray-800">
+                        <div className="flex items-start gap-3">
+                            <Info className="w-5 h-5 text-indigo-500 mt-0.5 flex-shrink-0" />
+                            <div>
+                                <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">How it works</p>
+                                <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                                    Clicking "Create Backup" will instantly generate a JSON snapshot of all your Users, Categories, and Items. 
+                                    The file will be automatically saved to your system's <strong>Downloads</strong> folder with today's date and time.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

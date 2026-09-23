@@ -346,6 +346,20 @@ export default function BrowseProducts() {
                         let cleanName = rawName.replace(/^\(v\)\s*/i, '').replace(/\[.*?\]|\(.*?\)/g, '').trim();
                         if (!cleanName) cleanName = rawName.trim();
                         
+                        let finalPrice = typeof item.price === 'string' ? parseFloat(item.price) : item.price;
+                        if (!finalPrice || isNaN(finalPrice) || finalPrice === 0) {
+                            if (item.variants?.length > 0) {
+                                const allVariantPrices = item.variants.flatMap((v: any) => {
+                                    const opts = (v.options && Array.isArray(v.options)) ? v.options : (v.name && v.price !== undefined ? [v] : []);
+                                    return opts.map((o: any) => typeof o.price === 'string' ? parseFloat(o.price) : o.price);
+                                });
+                                const validPrices = allVariantPrices.filter((p: any) => typeof p === 'number' && !isNaN(p) && p > 0);
+                                if (validPrices.length > 0) {
+                                    finalPrice = Math.min(...validPrices);
+                                }
+                            }
+                        }
+
                         const imgRes = await fetch(`http://localhost:15432/api/proxy/image-search?q=${encodeURIComponent(cleanName)}`);
                         const imgData = await imgRes.json();
                         const photos = imgData.data || [];
@@ -358,6 +372,7 @@ export default function BrowseProducts() {
                         }
                         return { 
                             ...item, 
+                            price: finalPrice || 0,
                             imageUrl: firstImage ? (firstImage.image_url || firstImage.image || firstImage.url || firstImage) : null,
                             checked: true 
                         };
@@ -435,10 +450,11 @@ export default function BrowseProducts() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, zone })
             });
-            if (!res.ok) throw new Error("Failed to wipe menu");
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.success) throw new Error(data.error || "Failed to wipe menu. Please check your internet connection.");
             alert("Menu wiped successfully");
             fetchMenu();
-        } catch(e: any) { alert(e.message); }
+        } catch(e: any) { alert(`Wipe Error: ${e.message}`); }
     };
 
     const handleClearBills = async () => {
@@ -539,7 +555,15 @@ export default function BrowseProducts() {
                                 <AlertTriangle className="w-5 h-5" /> Danger Zone Actions
                             </div>
                             <div className="flex items-center gap-3">
-                                <button onClick={() => handleClearMenu('All')} className="px-3 py-1.5 bg-white dark:bg-[#1A1A2E] border border-red-200 text-red-600 rounded hover:bg-red-600 hover:text-white transition-colors text-xs font-bold flex items-center gap-1.5"><Ban className="w-3.5 h-3.5"/> Wipe Menu</button>
+                                <button onClick={async (e) => {
+                                    const btn = e.currentTarget;
+                                    const originalHtml = btn.innerHTML;
+                                    btn.innerHTML = '<svg class="animate-spin h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Wiping...';
+                                    btn.disabled = true;
+                                    await handleClearMenu('All');
+                                    btn.innerHTML = originalHtml;
+                                    btn.disabled = false;
+                                }} className="px-3 py-1.5 bg-white dark:bg-[#1A1A2E] border border-red-200 text-red-600 rounded hover:bg-red-600 hover:text-white transition-colors text-xs font-bold flex items-center gap-1.5"><Ban className="w-3.5 h-3.5"/> Wipe Menu</button>
                                 <button onClick={handleClearImages} className="px-3 py-1.5 bg-white dark:bg-[#1A1A2E] border border-red-200 text-red-600 rounded hover:bg-red-600 hover:text-white transition-colors text-xs font-bold flex items-center gap-1.5"><ImageIcon className="w-3.5 h-3.5"/> Clear Images</button>
                                 <button onClick={handleClearBills} className="px-3 py-1.5 bg-white dark:bg-[#1A1A2E] border border-red-200 text-red-600 rounded hover:bg-red-600 hover:text-white transition-colors text-xs font-bold flex items-center gap-1.5"><Receipt className="w-3.5 h-3.5"/> Wipe Bills</button>
                             </div>
@@ -610,9 +634,24 @@ export default function BrowseProducts() {
                                                     {aiUploadFiles.map((file, idx) => (
                                                         <div key={idx} className="relative group rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 aspect-square flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800">
                                                             {file.type.startsWith('image/') ? (
-                                                                <img src={URL.createObjectURL(file)} alt={file.name} className="w-full h-full object-cover" />
+                                                                <>
+                                                                    <img src={URL.createObjectURL(file)} alt={file.name} className={`w-full h-full object-cover transition-all ${aiProcessing ? 'opacity-50 blur-[2px] grayscale-[50%]' : ''}`} />
+                                                                    {aiProcessing && (
+                                                                        <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden rounded-xl">
+                                                                            <div className="w-full h-0.5 bg-indigo-400 shadow-[0_0_15px_4px_rgba(129,140,248,0.8)] absolute" style={{ animation: 'scanline 2s cubic-bezier(0.4, 0, 0.2, 1) infinite' }} />
+                                                                            <style>{`
+                                                                                @keyframes scanline {
+                                                                                    0% { top: -10%; opacity: 0; }
+                                                                                    10% { opacity: 1; }
+                                                                                    90% { opacity: 1; }
+                                                                                    100% { top: 110%; opacity: 0; }
+                                                                                }
+                                                                            `}</style>
+                                                                        </div>
+                                                                    )}
+                                                                </>
                                                             ) : (
-                                                                <UploadCloud className="w-8 h-8 text-indigo-400" />
+                                                                <UploadCloud className={`w-8 h-8 text-indigo-400 ${aiProcessing ? 'animate-pulse' : ''}`} />
                                                             )}
                                                             <button 
                                                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAiUploadFiles(prev => prev.filter((_, i) => i !== idx)); }}
@@ -680,9 +719,38 @@ export default function BrowseProducts() {
                                         <button 
                                             onClick={handleExtractMenu}
                                             disabled={aiUploadFiles.length === 0 || aiProcessing}
-                                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg flex justify-center items-center gap-2 transition-all disabled:opacity-50"
+                                            className={`relative w-full overflow-hidden font-black py-3.5 rounded-xl flex justify-center items-center gap-2 transition-all disabled:cursor-not-allowed ${
+                                                aiProcessing 
+                                                ? 'shadow-[0_0_20px_rgba(99,102,241,0.5)] border border-indigo-400' 
+                                                : 'bg-indigo-600 hover:bg-indigo-700 text-white hover:shadow-lg hover:shadow-indigo-500/30 disabled:bg-gray-300 disabled:dark:bg-gray-700 disabled:text-gray-500 disabled:shadow-none'
+                                            }`}
                                         >
-                                            {aiProcessing ? 'Extracting via AI...' : 'Preview Items'}
+                                            {aiProcessing ? (
+                                                <>
+                                                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 bg-[length:200%_auto] animate-[ai-pulse_2s_linear_infinite]" />
+                                                    <div className="absolute inset-0 opacity-20 mix-blend-overlay bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiMwMDAiIGZpbGwtb3BhY2l0eT0iMC4xIi8+PC9zdmc+')] pointer-events-none" />
+                                                    <div className="absolute -inset-[100%] bg-gradient-to-r from-transparent via-white/25 to-transparent skew-x-[30deg] animate-[shine_1.5s_infinite_ease-in-out]" />
+                                                    
+                                                    <Sparkles className="w-5 h-5 text-indigo-100 animate-pulse relative z-10" />
+                                                    <span className="relative z-10 tracking-widest text-white text-sm flex items-center gap-1">
+                                                        EXTRACTING VIA AI
+                                                        <span className="flex gap-0.5 ml-1">
+                                                            <span className="animate-[bounce_1s_infinite_0ms] text-lg leading-none">.</span>
+                                                            <span className="animate-[bounce_1s_infinite_100ms] text-lg leading-none">.</span>
+                                                            <span className="animate-[bounce_1s_infinite_200ms] text-lg leading-none">.</span>
+                                                        </span>
+                                                    </span>
+                                                    <style>{`
+                                                        @keyframes ai-pulse { 0% { background-position: 0% center; } 100% { background-position: 200% center; } }
+                                                        @keyframes shine { 0% { left: -100%; } 100% { left: 100%; } }
+                                                    `}</style>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Sparkles className="w-4 h-4 text-indigo-200" />
+                                                    Preview Items
+                                                </>
+                                            )}
                                         </button>
                                     </div>
                                 </div>
@@ -732,8 +800,22 @@ export default function BrowseProducts() {
                                                     <h5 className="font-bold text-sm text-gray-900 dark:text-white truncate" title={item.name}>{item.name}</h5>
                                                     <div className="flex items-center justify-between mt-1">
                                                         <span className="text-xs font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded">{item.category}</span>
-                                                        <span className="text-sm font-black text-green-600">₹{item.price}</span>
+                                                        <span className="text-sm font-black text-green-600">
+                                                            {item.variants?.length > 0 ? `Starts at ₹${item.price}` : `₹${item.price}`}
+                                                        </span>
                                                     </div>
+                                                    {item.variants?.length > 0 && (
+                                                        <div className="mt-1.5 flex flex-wrap gap-1">
+                                                            {item.variants.flatMap((v: any) => {
+                                                                const opts = (v.options && Array.isArray(v.options)) ? v.options : (v.name && v.price !== undefined ? [v] : []);
+                                                                return opts;
+                                                            }).map((opt: any, i: number) => (
+                                                                <span key={i} className="text-[9px] font-bold text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">
+                                                                    {opt.name} (₹{opt.price})
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}
